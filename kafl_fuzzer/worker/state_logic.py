@@ -7,6 +7,7 @@
 Main logic used by Worker to push nodes through various fuzzing stages/mutators.
 """
 
+import os
 import time
 
 from kafl_fuzzer.common.rand import rand
@@ -192,6 +193,31 @@ class FuzzingStateLogic:
         timer_end = time.time()
         self.performance = (timer_end-timer_start) / num_execs
 
+        ## TDX / agent-specific trace execution
+        ## The agent_flags is a custom field in the payload buffer
+        ## and not complatible with other harnesses at this point!
+
+        # execute once to dump payload
+        self.worker.q.set_agent_flags(1)
+        self.execute_naked(payload, timeout=10, label="dump")
+        self.worker.q.set_agent_flags(0)
+        # execute once to dump fuzzing stats
+        self.worker.q.set_agent_flags(2)
+        self.execute_naked(payload, timeout=10, label="stats")
+        self.worker.q.set_agent_flags(0)
+        # execute once to collect stack dumps, redirecting to custom hprintf logfile
+        self.worker.q.set_agent_flags(4)
+        old_enable = self.worker.q.hprintf_log
+        old_logfile = self.worker.q.hprintf_logfile
+        self.worker.q.hprintf_log = True
+        dump_dir = self.config.work_dir + "/dump/"
+        self.worker.q.hprintf_logfile = dump_dir + "stackdump_%05d.log" % metadata['id']
+        assert(not os.path.exists(self.worker.q.hprintf_logfile))
+        self.execute_naked(payload, timeout=10, label="stats")
+        self.worker.q.hprintf_log = old_enable
+        self.worker.q.hprintf_logfile = old_logfile
+        self.worker.q.set_agent_flags(0)
+
         # Trimming only for stable + non-crashing inputs
         if metadata["info"]["exit_reason"] != "regular": #  or metadata["info"]["stable"]:
             self.logger.debug("Validate: Skip trimming..")
@@ -307,6 +333,13 @@ class FuzzingStateLogic:
         parent_info = self.get_parent_info(extra_info)
         return self.worker.validate_bytes(payload, metadata, parent_info)
 
+    def execute_naked(self, payload, timeout=None, label=None):
+        self.stage_info_execs += 1
+
+        if label and label != self.stage_info["method"]:
+            self.stage_update_label(label)
+
+        return self.worker.execute_naked(payload, timeout=timeout)
 
     def execute(self, payload, label=None, extra_info=None):
 
