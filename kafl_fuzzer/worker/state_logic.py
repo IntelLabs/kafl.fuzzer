@@ -284,9 +284,22 @@ class FuzzingStateLogic:
             grimoire.havoc(generalized_input, self.execute, self.grimoire, havoc_amount, generalized=False)
 
     def handle_redqueen(self, payload, metadata):
+
+        if not self.config.redqueen:
+            return
+
         redqueen_start_time = time.time()
-        if self.config.redqueen:
-            self.__perform_redqueen(payload, metadata)
+
+        success = self.__perform_redqueen(payload, metadata)
+        if not success and self.config.funky:
+            success = self.__perform_redqueen(payload, metadata)
+            if success:
+                self.logger.warn("[funky] Redqueen success in 2nd round (id=%d)" % metadata["id"])
+        if not success and self.config.funky:
+            success = self.__perform_redqueen(payload, metadata)
+            if success:
+                self.logger.warn("[funky] Redqueen success in 3nd round (id=%d)" % metadata["id"])
+
         self.redqueen_time += time.time() - redqueen_start_time
 
     def handle_havoc(self, payload, metadata):
@@ -363,12 +376,15 @@ class FuzzingStateLogic:
 
     def __get_bitmap_hash(self, payload):
         bitmap, _ = self.execute(payload)
-        if bitmap is None:
-            return None
         return bitmap.hash()
 
 
     def __get_bitmap_hash_robust(self, payload):
+        # FIXME: make this work in funky mode
+        # - execute() is always robust relative to 'funky' setting
+        # - this check still kind of works but could be done earlier:
+        #   it tells if a payload is stable relative to current -funky setting
+        # - for funky mode, we still need to implement a funky 'trace' mode
         hashes = {self.__get_bitmap_hash(payload) for _ in range(3)}
         if len(hashes) == 1:
             return hashes.pop()
@@ -383,20 +399,25 @@ class FuzzingStateLogic:
         extension = bytes([207, 117, 130, 107, 183, 200, 143, 154])
         appended_hash = self.__get_bitmap_hash_robust(payload + extension)
 
+        if not orig_hash or not appended_hash:
+            # abort early if payload is unstable. Caller may retry..
+            self.logger.info("Redqueen: Input %d not stable, skipping.." % metadata["id"])
+            return False
+
         if orig_hash and orig_hash == appended_hash:
             self.logger.debug("Redqueen: Input can be extended")
             payload_array = bytearray(payload + extension)
         else:
             payload_array = bytearray(payload)
 
-        colored_alternatives = self.__perform_coloring(payload_array)
+        colored_alternatives = self.__perform_coloring(payload)
         if colored_alternatives:
             payload_array = colored_alternatives[0]
             assert isinstance(colored_alternatives[0], bytearray), print(
                     "!! ColoredAlternatives:", repr(colored_alternatives[0]), type(colored_alternatives[0]))
         else:
-            self.logger.debug("Redqueen: Input is not stable, skipping..")
-            return
+            self.logger.info("Redqueen: Input %d not stable after coloring, skipping.." % metadata["id"])
+            return False
 
         self.stage_update_label("redq_trace")
         rq_info = RedqueenInfoGatherer()
@@ -417,6 +438,7 @@ class FuzzingStateLogic:
         # for addr in rq_info.get_boring_cmps():
         #    self.redqueen_state.blacklist_cmp_addr(addr)
         # self.redqueen_state.update_redqueen_blacklist(RedqueenWorkdir(0))
+        return True
 
 
     def dilate_effector_map(self, effector_map, limiter_map):
