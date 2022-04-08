@@ -83,7 +83,7 @@ build_capstone()
 {
 	if [ ! -d "$CAPSTONE_ROOT" ]; then
 		echo "[!] Could not find CAPSTONE_ROOT - failed to build capstone."
-		return
+		exit -1
 	fi
 
 	#echo "[*] Need to remove any existing (and likely conflicting) capstone install (need sudo)"
@@ -100,7 +100,7 @@ build_libxdc()
 {
 	if [ ! -d "$LIBXDC_ROOT" ]; then
 		echo "[!] Could not find LIBXDC_ROOT - failed to build libxdc."
-		return
+		exit -1
 	fi
 
 
@@ -118,7 +118,7 @@ build_qemu()
 {
 	if [ ! -d "$QEMU_ROOT" ]; then
 		echo "[!] Could not find QEMU_ROOT - failed to build Qemu."
-		return
+		exit -1
 	fi
 
 	echo
