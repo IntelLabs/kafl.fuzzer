@@ -56,6 +56,7 @@ system_deps()
 
 	echo "[*] Installing build dependencies for QEMU ..."
 	sudo apt-get build-dep qemu-system-x86 -y
+	sudo apt-get install -y libcap-dev libattr1-dev # virtfs
 
 	echo "[*] Installing kAFL python dependencies ..."
 	pip3 install -r $KAFL_ROOT/requirements.txt
@@ -133,6 +134,7 @@ build_qemu()
 			--disable-werror \
 			--disable-capstone \
 			--disable-libssh \
+			--enable-virtfs \
 			--enable-nyx \
 			--enable-nyx-static \
 			--disable-tools
