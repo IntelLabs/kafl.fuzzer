@@ -71,7 +71,7 @@ class qemu:
 
         # TODO: list append should work better than string concatenation, especially for str.replace() and later popen()
         self.cmd = self.config.qemu_base
-        self.cmd += " -chardev socket,server,nowait,id=nyx_socket,path=" + self.control_filename + \
+        self.cmd += " -chardev socket,server,id=nyx_socket,path=" + self.control_filename + \
                     " -device nyx,chardev=nyx_socket" + \
                     ",workdir=" + work_dir + \
                     ",worker_id=%d" % self.pid + \
@@ -277,9 +277,12 @@ class qemu:
         self.control.send(b'x')
         self.control.recv(1)
 
+    def wait_qemu(self):
+        self.control.recv(1)
+
     def __qemu_handshake(self):
 
-        self.run_qemu()
+        self.wait_qemu()
 
         self.qemu_aux_buffer = QemuAuxBuffer(self.qemu_aux_buffer_filename)
         if not self.qemu_aux_buffer.validate_header():
@@ -288,12 +291,12 @@ class qemu:
 
         while self.qemu_aux_buffer.get_state() != 3:
             logger.debug("%s Waiting for target to enter fuzz mode.." % self)
-            self.run_qemu()
             result = self.qemu_aux_buffer.get_result()
             if result.exec_code == RC.ABORT:
                 self.handle_habort()
             if result.exec_code == RC.HPRINTF:
                 self.handle_hprintf()
+            self.run_qemu()
 
         logger.debug("%s Handshake done." % self)
 
