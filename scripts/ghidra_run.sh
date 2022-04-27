@@ -5,8 +5,7 @@
 # Copyright 2020 Intel Corporation
 # SPDX-License-Identifier: MIT
 
-KAFL_ROOT=~/nyx
-GHIDRA_ROOT=~/ghidra_10.0.2_PUBLIC
+GHIDRA_ROOT=~/ghidra_10.1.3_PUBLIC
 
 
 WORKDIR="$(realpath $1)" # kAFL work dir with traces/ folder

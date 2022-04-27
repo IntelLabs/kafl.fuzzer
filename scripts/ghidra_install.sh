@@ -2,7 +2,7 @@
 
 set -e
 
-URL='https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_10.1.1_build/ghidra_10.1.1_PUBLIC_20211221.zip'
+URL='https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_10.1.3_build/ghidra_10.1.3_PUBLIC_20220421.zip'
 
 ZIPFILE="$(basename "$URL")"
 
