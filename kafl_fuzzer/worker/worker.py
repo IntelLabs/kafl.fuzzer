@@ -63,10 +63,6 @@ def worker_loader(pid, config):
             worker.q.async_exit()
         logger.info("Worker-%02d Exit." % pid)
 
-
-num_funky = 0
-num_crashes = 0
-
 class WorkerTask:
 
     def __init__(self, pid, config, connection, auto_reload=False):
@@ -82,9 +78,7 @@ class WorkerTask:
         self.t_hard = config.timeout_hard
         self.t_soft = config.timeout_soft
         self.t_check = config.timeout_check
-        self.qemu_logfiles = {'hprintf': self.q.hprintf_logfile,
-                              'serial': self.q.serial_logfile}
-
+        self.num_funky = 0
 
     def __str__(self):
         return "Worker-%02d" % self.pid
@@ -153,12 +147,6 @@ class WorkerTask:
                 logger.error("%s Lost connection to Manager. Shutting down." % self)
                 return
 
-            if self.config.log_crashes:
-                # reset logs for each new seed/input
-                for _, logfile in self.qemu_logfiles.items():
-                    if os.path.exists(logfile):
-                        os.truncate(logfile,0)
-
             if msg["type"] == MSG_RUN_NODE:
                 self.handle_node(msg)
             elif msg["type"] == MSG_IMPORT:
@@ -218,26 +206,12 @@ class WorkerTask:
         return False, runtime_avg/num
 
     def store_funky(self, data):
-        global num_funky
-        num_funky += 1
-
         # store funky input for further analysis 
-        atomic_write(f"%s/funky/payload_%04x%02x" % (self.config.work_dir, num_funky, self.pid), data)
+        filename = f"%s/funky/payload_%04x%02x" % (self.config.work_dir, self.num_funky, self.pid)
+        atomic_write(filename, data)
+        self.num_funky += 1
 
 
-    def __store_crashlogs(self, reason):
-        # collect any logs for *new* crash events
-        # no real payload IDs here since we don't know them yet
-        global num_crashes
-        num_crashes += 1
-
-        for logname, logfile in self.qemu_logfiles.items():
-            if os.path.exists(logfile):
-                if os.path.getsize(logfile) > 0:
-                    # qemu may keep the FD so we just copy + truncate here
-                    shutil.copy(logfile, "%s/logs/%s_%s_%04x%02x.log" % (
-                        self.config.work_dir, reason[:5], logname, num_crashes, self.pid))
-                    os.truncate(logfile,0)
 
     def validate_bits(self, data, old_node, default_info):
         new_bitmap, _ = self.execute(data, default_info)
@@ -421,7 +395,7 @@ class WorkerTask:
                     return exec_res, is_new
 
             if crash and self.config.log_crashes:
-                self.__store_crashlogs(exec_res.exit_reason)
+                self.q.store_crashlogs(exec_res.exit_reason, exec_res.hash())
 
             if crash or stable:
                 self.__send_to_manager(data, exec_res, info)

@@ -15,6 +15,7 @@ import struct
 import subprocess
 import sys
 import time
+import shutil
 
 from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.common.util import read_binary_file, atomic_write, strdump, print_hprintf
@@ -336,6 +337,19 @@ class qemu:
 
         return True
 
+    def store_crashlogs(self, label, stamp):
+        # Collect current/accumulated logs
+        # We don't have a payload ID yet and in fact manager may refuse to store
+        if self.hprintf_log and os.path.exists(self.hprintf_logfile):
+            if os.path.getsize(self.hprintf_logfile) > 0:
+                shutil.copy(self.hprintf_logfile, "%s/logs/%s_%s.log" % (
+                    self.config.work_dir, label[:5], stamp[:6]))
+                os.truncate(self.hprintf_logfile, 0)
+
+    def flush_crashlogs(self):
+        if self.hprintf_log and os.path.exists(self.hprintf_logfile):
+            os.truncate(self.hprintf_logfile, 0)
+
     def handle_hprintf(self):
         msg = self.qemu_aux_buffer.get_misc_buf()
         msg = msg.decode('latin-1', errors='backslashreplace')
@@ -405,6 +419,10 @@ class qemu:
             if self.persistent_runs >= self.config.reload:
                 self.qemu_aux_buffer.set_reload_mode(True)
                 self.persistent_runs = 0
+
+        if self.config.log_crashes and self.persistent_runs == 0:
+            # flush crashlogs after VM state reset (persistent_runs=0)
+            self.flush_crashlogs()
 
         result = None
         old_address = 0
