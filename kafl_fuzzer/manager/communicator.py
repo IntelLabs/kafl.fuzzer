@@ -64,11 +64,10 @@ class ServerConnection:
 
 
 class ClientConnection:
-    def __init__(self, id, config):
-        self.id = id
+    def __init__(self, pid, config):
+        self.pid = pid
         self.address = config.work_dir + KAFL_NAMED_SOCKET
         self.sock = self.connect()
-        self.send_ready()
 
     def connect(self):
         sock = Client(self.address, 'AF_UNIX')
@@ -79,11 +78,11 @@ class ClientConnection:
         return msgpack.unpackb(data, strict_map_key=False)
 
     def send_ready(self):
-        self.sock.send_bytes(msgpack.packb({"type": MSG_READY, "client_id": self.id}))
+        self.sock.send_bytes(msgpack.packb({"type": MSG_READY, "worker_id": self.pid}))
 
     def send_new_input(self, data, bitmap, info):
-        self.sock.send_bytes(
-            msgpack.packb({"type": MSG_NEW_INPUT, "input": {"payload": data, "bitmap": bitmap, "info": info}}))
+        self.sock.send_bytes(msgpack.packb(
+            {"type": MSG_NEW_INPUT, "input": {"payload": data, "bitmap": bitmap, "info": info}}))
 
     def send_node_done(self, node_id, results, new_payload):
         self.sock.send_bytes(msgpack.packb(

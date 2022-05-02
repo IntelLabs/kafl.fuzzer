@@ -29,26 +29,30 @@ from kafl_fuzzer.manager.communicator import ClientConnection, MSG_IMPORT, MSG_R
 from kafl_fuzzer.manager.node import QueueNode
 from kafl_fuzzer.manager.statistics import WorkerStatistics
 from kafl_fuzzer.worker.state_logic import FuzzingStateLogic
-from kafl_fuzzer.worker.qemu import qemu, QemuIOException
+from kafl_fuzzer.worker.qemu import QemuIOException
+from kafl_fuzzer.worker.qemu import qemu as Qemu
 
 def worker_loader(pid, config):
 
     def sigterm_handler(signal, frame):
-        if worker.q:
+        if worker and worker.q:
             worker.q.async_exit()
         sys.exit(0)
 
-    logger.debug(("Worker-%02d PID: " % pid) + str(os.getpid()))
+    logger.debug("Worker-%02d PID: %d" % (pid, os.getpid()))
     # sys.stdout = open("worker_%d.out"%pid, "w")
     #config = FuzzerConfiguration()
 
     psutil.Process().cpu_affinity([pid + config.cpu_offset])
 
-    connection = ClientConnection(pid, config)
+    qemu = Qemu(pid, config)
+    if not qemu.start():
+        logger.error("Worker-%02d Failed to launch Qemu." % pid)
+        return
 
     rand.reseed()
 
-    worker = WorkerTask(pid, config, connection)
+    worker = WorkerTask(pid, config, qemu)
 
     signal.signal(signal.SIGTERM, sigterm_handler)
     os.setpgrp()
@@ -65,11 +69,12 @@ def worker_loader(pid, config):
 
 class WorkerTask:
 
-    def __init__(self, pid, config, connection, auto_reload=False):
+    def __init__(self, pid, config, qemu):
         self.config = config
         self.pid = pid
-        self.conn = connection
-        self.q = qemu(self.pid, config)
+        self.q = qemu
+
+        self.conn = ClientConnection(pid, config)
         self.statistics = WorkerStatistics(self.pid, config)
         self.logic = FuzzingStateLogic(self, config)
         self.bitmap_storage = BitmapStorage(self.config, "main")
@@ -136,10 +141,9 @@ class WorkerTask:
         self.conn.send_node_done(meta_data["id"], results, new_payload)
 
     def loop(self):
-        if not self.q.start():
-            return
+        logger.info("%s entering fuzz loop.." % self)
+        self.conn.send_ready()
 
-        logger.info("%s is ready." % self)
         while True:
             try:
                 msg = self.conn.recv()
