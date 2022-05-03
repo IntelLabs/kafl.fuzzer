@@ -62,59 +62,6 @@ system_deps()
 	pip3 install -r $KAFL_ROOT/requirements.txt
 }
 
-set_env()
-{
-	test -d $CAPSTONE_ROOT || fatal "Could not find CAPSTONE_ROOT. Missing env setup?"
-	test -d $LIBXDC_ROOT || fatal "Could not find LIBXDC_ROOT. Missing env setup?"
-
-	## setup environment for non-global capstone/libxdc builds
-	C_INCLUDE_PATH=$CAPSTONE_ROOT/include:$LIBXDC_ROOT
-	LIBRARY_PATH=$CAPSTONE_ROOT:$LIBXDC_ROOT/
-	LD_LIBRARY_PATH=$CAPSTONE_ROOT:$LIBXDC_ROOT/
-	export C_INCLUDE_PATH LIBRARY_PATH LD_LIBRARY_PATH
-}
-
-unset_env()
-{
-	## unset build environment
-	unset C_INCLUDE_PATH LIBRARY_PATH LD_LIBRARY_PATH
-}
-
-build_capstone()
-{
-	if [ ! -d "$CAPSTONE_ROOT" ]; then
-		echo "[!] Could not find CAPSTONE_ROOT - failed to build capstone."
-		exit -1
-	fi
-
-	#echo "[*] Need to remove any existing (and likely conflicting) capstone install (need sudo)"
-	#sudo apt-get remove -y libcapstone3 libcapstone-dev
-
-	echo "[*] Building capstone at $CAPSTONE_ROOT..."
-	echo "-------------------------------------------------"
-	make -C $CAPSTONE_ROOT -j $jobs
-	#echo "[*] Installing capstone v4 branch into system (need sudo)"
-	#sudo make -C $CAPSTONE_ROOT install
-}
-
-build_libxdc()
-{
-	if [ ! -d "$LIBXDC_ROOT" ]; then
-		echo "[!] Could not find LIBXDC_ROOT - failed to build libxdc."
-		exit -1
-	fi
-
-
-	echo "[*] Building libxdc at $LIBXDC_ROOT..."
-	echo "-------------------------------------------------"
-	set_env
-	make -C $LIBXDC_ROOT -j $jobs
-	unset_env
-	#echo "[*] Installing libxdc branch into system (need sudo)"
-	#sudo make -C $LIBXDC_ROOT install
-
-}
-
 build_qemu()
 {
 	if [ ! -d "$QEMU_ROOT" ]; then
@@ -126,20 +73,9 @@ build_qemu()
 	echo "[*] Building Qemu at $QEMU_ROOT..."
 	echo "-------------------------------------------------"
 	pushd $QEMU_ROOT > /dev/null
-		set_env
-		./configure \
-			--target-list=x86_64-softmmu \
-			--disable-gtk \
-			--disable-docs \
-			--disable-werror \
-			--disable-capstone \
-			--disable-libssh \
-			--enable-virtfs \
-			--enable-nyx \
-			--enable-nyx-static \
-			--disable-tools
-		make -j $jobs
-		unset_env
+		export CAPSTONE_ROOT
+		export LIBXDC_ROOT
+		./compile_qemu_nyx.sh static
 	popd
 
 	echo
@@ -257,8 +193,6 @@ case $1 in
 		build_radamsa
 		;;
 	"qemu")
-		build_capstone
-		build_libxdc
 		build_qemu
 		;;
 	"kvm")
@@ -267,8 +201,6 @@ case $1 in
 	"all")
 		system_check
 		system_deps
-		build_capstone
-		build_libxdc
 		build_qemu
 		build_linux
 		build_radamsa
