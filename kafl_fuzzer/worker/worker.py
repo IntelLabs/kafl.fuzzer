@@ -33,47 +33,17 @@ from kafl_fuzzer.worker.qemu import QemuIOException
 from kafl_fuzzer.worker.qemu import qemu as Qemu
 
 def worker_loader(pid, config):
-
-    def sigterm_handler(signal, frame):
-        if worker and worker.q:
-            worker.q.async_exit()
-        sys.exit(0)
-
     logger.debug("Worker-%02d PID: %d" % (pid, os.getpid()))
-    # sys.stdout = open("worker_%d.out"%pid, "w")
-    #config = FuzzerConfiguration()
-
-    psutil.Process().cpu_affinity([pid + config.cpu_offset])
-
-    qemu = Qemu(pid, config)
-    if not qemu.start():
-        logger.error("Worker-%02d Failed to launch Qemu." % pid)
-        return
-
-    rand.reseed()
-
-    worker = WorkerTask(pid, config, qemu)
-
-    signal.signal(signal.SIGTERM, sigterm_handler)
-    os.setpgrp()
-
-    try:
-        worker.loop()
-    except QemuIOException:
-        # try to restart here, if Qemu is really dead?
-        pass
-    finally:
-        if worker.q:
-            worker.q.async_exit()
-        logger.info("Worker-%02d Exit." % pid)
+    worker = WorkerTask(pid, config)
+    worker.start()
 
 class WorkerTask:
 
-    def __init__(self, pid, config, qemu):
+    def __init__(self, pid, config):
         self.config = config
         self.pid = pid
-        self.q = qemu
 
+        self.q = Qemu(self.pid, self.config)
         self.conn = ClientConnection(pid, config)
         self.statistics = WorkerStatistics(self.pid, config)
         self.logic = FuzzingStateLogic(self, config)
@@ -139,6 +109,32 @@ class WorkerTask:
                 logger.warn("%s Provided alternative payload found invalid - bug in stage %s?"
                           % (self, meta_data["state"]["name"]))
         self.conn.send_node_done(meta_data["id"], results, new_payload)
+
+    def start(self):
+
+        def sigterm_handler(signal, frame):
+            if self.q:
+                self.q.async_exit()
+            sys.exit(0)
+
+        signal.signal(signal.SIGTERM, sigterm_handler)
+        os.setpgrp()
+
+        psutil.Process().cpu_affinity([self.pid + self.config.cpu_offset])
+        rand.reseed()
+
+        try:
+            if self.q.start():
+                self.loop()
+            else:
+                logger.error("%s Failed to launch Qemu." % self)
+        except QemuIOException:
+            # Qemu has likely died on us - try to restart?
+            pass
+        finally:
+            if self.q:
+                self.q.async_exit()
+            logger.info("%s Exit." % self)
 
     def loop(self):
         logger.info("%s entering fuzz loop.." % self)
