@@ -31,7 +31,7 @@ def qemu_sweep(msg):
     def get_qemu_processes():
         for proc in psutil.process_iter(['pid', 'name', 'username']):
             if proc.info['username'] == getpass.getuser():
-                if 'qemu' in proc.info['name']:
+                if 'qemu-system-x86_64' in proc.info['name']:
                     yield (proc.info['pid'])
 
     pids = [ p for p in get_qemu_processes() ]
