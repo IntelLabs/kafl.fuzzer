@@ -125,6 +125,10 @@ class qemu:
         if self.config.qemu_append:
             self.cmd.extend(["-append", self.config.qemu_append])
 
+        # Qemu extra options
+        if self.config.qemu_extra:
+            self.cmd.extend(self.config.qemu_extra.split(" "))
+
         # Fast VM snapshot configuration
         self.cmd.append("-fast_vm_reload")
         snapshot_path = work_dir + "/snapshot/",
@@ -138,10 +142,6 @@ class qemu:
         else:
             # boot and wait for snapshot creation (or load from existing file)
             self.cmd.append("path=%s,load=on" % (snapshot_path))
-
-        # Qemu extra options
-        if self.config.qemu_extra:
-            self.cmd.extend(self.config.qemu_extra.split(" "))
 
         # delayed Qemu startup - launching too many at once seems to cause random crashes
         if pid != 1337:
