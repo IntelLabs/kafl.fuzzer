@@ -239,6 +239,15 @@ class qemu:
 
         self.persistent_runs = 0
 
+        # SHM files must exist on Qemu launch
+        self.ijon_shm_f     = os.open(self.ijonmap_filename, os.O_RDWR | os.O_SYNC | os.O_CREAT)
+        self.kafl_shm_f     = os.open(self.bitmap_filename, os.O_RDWR | os.O_SYNC | os.O_CREAT)
+        self.fs_shm_f       = os.open(self.payload_filename, os.O_RDWR | os.O_SYNC | os.O_CREAT)
+
+        os.ftruncate(self.ijon_shm_f, self.ijonmap_size)
+        os.ftruncate(self.kafl_shm_f, self.bitmap_size)
+        os.ftruncate(self.fs_shm_f, self.payload_size)
+
         if self.pid not in [0, 1337]:
             final_cmdline = ""
         else:
@@ -275,6 +284,15 @@ class qemu:
                 self.shutdown()
             return False
 
+        logger.debug("%s Handshake done." % self)
+
+        # for -R = {0,1}, set reload_mode here just once
+        if self.config.reload == 1:
+            self.qemu_aux_buffer.set_reload_mode(True)
+        else:
+            self.qemu_aux_buffer.set_reload_mode(False)
+        self.qemu_aux_buffer.set_timeout(self.config.timeout_hard)
+
         return True
 
     # release Qemu and wait for it to return
@@ -303,16 +321,13 @@ class qemu:
                 self.handle_hprintf()
             self.run_qemu()
 
-        logger.debug("%s Handshake done." % self)
-
-        # for -R = {0,1}, set reload_mode here just once
-        if self.config.reload == 1:
-            self.qemu_aux_buffer.set_reload_mode(True)
-        else:
-            self.qemu_aux_buffer.set_reload_mode(False)
-        self.qemu_aux_buffer.set_timeout(self.config.timeout_hard)
-
-        return
+        # Qemu tends to truncate / resize the files. Not sure why..
+        assert(self.payload_size == os.path.getsize(self.payload_filename))
+        assert(self.bitmap_size == os.path.getsize(self.bitmap_filename))
+        assert(self.ijonmap_size == os.path.getsize(self.ijonmap_filename))
+        self.kafl_shm = mmap.mmap(self.kafl_shm_f, 0)
+        self.c_bitmap = (ctypes.c_uint8 * self.bitmap_size).from_buffer(self.kafl_shm)
+        self.fs_shm = mmap.mmap(self.fs_shm_f, 0)
 
     def __qemu_connect(self):
         # Note: setblocking() disables the timeout! settimeout() will automatically set blocking!
@@ -332,19 +347,6 @@ class qemu:
             time.sleep(0.1)
 
 
-        self.ijon_shm_f     = os.open(self.ijonmap_filename, os.O_RDWR | os.O_SYNC | os.O_CREAT)
-        self.kafl_shm_f     = os.open(self.bitmap_filename, os.O_RDWR | os.O_SYNC | os.O_CREAT)
-        self.fs_shm_f       = os.open(self.payload_filename, os.O_RDWR | os.O_SYNC | os.O_CREAT)
-
-        os.ftruncate(self.ijon_shm_f, self.ijonmap_size)
-        os.ftruncate(self.kafl_shm_f, self.bitmap_size)
-        os.ftruncate(self.fs_shm_f, self.payload_size)
-
-        self.kafl_shm = mmap.mmap(self.kafl_shm_f, 0)
-        self.c_bitmap = (ctypes.c_uint8 * self.bitmap_size).from_buffer(self.kafl_shm)
-        self.fs_shm = mmap.mmap(self.fs_shm_f, 0)
-
-        return True
 
     def store_crashlogs(self, label, stamp):
         # Collect current/accumulated logs
