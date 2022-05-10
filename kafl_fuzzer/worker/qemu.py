@@ -148,10 +148,6 @@ class qemu:
             # boot and wait for snapshot creation (or load from existing file)
             self.cmd.append("path=%s,load=on" % (snapshot_path))
 
-        # delayed Qemu startup - launching too many at once seems to cause random crashes
-        if pid != 1337:
-            time.sleep(0.1*pid)
-
     def __str__(self):
         return "Worker-%02d" % self.pid
 
@@ -252,6 +248,10 @@ class qemu:
                     final_cmdline += '\n\t' + arg
                 else:
                     final_cmdline += ' ' + arg
+
+        # delayed Qemu startup - some nasty race condition when launching too many at once
+        if self.pid not in [0, 1337]:
+            time.sleep(4 + 0.1*self.pid)
 
         logger.info("%s Launching virtual machine...%s" % (self, final_cmdline))
 
