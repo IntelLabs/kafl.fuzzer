@@ -328,7 +328,8 @@ class qemu:
             except socket.error:
                 if self.process.returncode is not None:
                     raise
-            logger.debug("Waiting for Qemu connect..")
+            logger.debug("%s Waiting for Qemu connect.." % self)
+            time.sleep(0.1)
 
 
         self.ijon_shm_f     = os.open(self.ijonmap_filename, os.O_RDWR | os.O_SYNC | os.O_CREAT)
@@ -373,7 +374,7 @@ class qemu:
         msg = msg.decode('latin-1', errors='backslashreplace')
         msg = "Guest ABORT: %s" % msg
 
-        logger.error(msg)
+        logger.error("%s Guest ABORT: %s" % (self, msg))
         if self.hprintf_log:
             with open(self.hprintf_logfile, "a") as f:
                 f.write(msg)
@@ -401,16 +402,16 @@ class qemu:
             self.run_qemu()
             result = self.qemu_aux_buffer.get_result()
             if result.page_fault:
-                logger.warn("Page fault encountered!")
+                logger.warn("%s Unhandled page fault in debug mode!" % self)
             if result.pt_overflow:
-                logger.warn("PT trashed!")
+                logger.warn("%s PT trashed!" % self)
             if result.exec_code == RC.HPRINTF:
                 self.handle_hprintf()
                 continue
             if result.exec_code == RC.ABORT:
                 self.handle_habort()
 
-        logger.info("Result: %s\n" % self.exit_reason(result))
+        logger.info("%s Result: %s\n" % (self, self.exit_reason(result)))
         #self.audit(result)
         return result
 
@@ -455,6 +456,7 @@ class qemu:
                 break
 
             if result.page_fault:
+                logger.warn("%s Page fault encountered!" % self)
                 if result.page_fault_addr == old_address:
                     logger.error("%s Failed to resolve page after second execution! Qemu status:\n%s" % (self, str(result._asdict())))
                     break
