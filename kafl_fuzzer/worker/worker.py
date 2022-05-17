@@ -65,7 +65,7 @@ class WorkerTask:
         try:
             self.logic.process_import(payload, meta_data)
         except QemuIOException:
-            logger.warn("%s: Execution failure on import.")
+            logger.warn("%s: Execution failure on import.", self)
             self.conn.send_node_abort(None, None)
             raise
         self.conn.send_ready()
