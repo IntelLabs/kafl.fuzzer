@@ -136,7 +136,7 @@ class qemu:
 
         # Fast VM snapshot configuration
         self.cmd.append("-fast_vm_reload")
-        snapshot_path = work_dir + "/snapshot/",
+        snapshot_path = work_dir + "/snapshot/"
 
         if pid == 0 or pid == 1337 and not resume:
             # boot and create snapshot
