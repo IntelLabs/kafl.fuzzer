@@ -341,7 +341,7 @@ def generate_traces_worker(config, pid, work_queue):
         config.trace = False
         config.trace_cb = True
 
-    q = qemu(qemu_id, config, debug_mode=False)
+    q = qemu(qemu_id, config, resume=config.resume, debug_mode=False)
     if not q.start():
         logger.error("%s: Could not start Qemu. Exit." % pname)
         return None
