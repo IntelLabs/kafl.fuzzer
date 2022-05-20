@@ -380,7 +380,12 @@ def generate_traces_worker(config, pid, work_queue):
                                 cmd += [ range_a, range_b ]
 
                         try:
-                            subprocess.run(cmd, timeout=180)
+                            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=180)
+                            if result.returncode != 0:
+                                logger.warn("ptdump of %s failed with return code %d. Output:\n%s" % (
+                                    os.path.basename(input_path), result.returncode,
+                                    result.stdout))
+
                             os.unlink(pt_tmp.name)
                         except subprocess.TimeoutExpired as e:
                             logger.warn(e)
@@ -405,8 +410,8 @@ def generate_traces_worker(config, pid, work_queue):
         raise
     finally:
         os.unlink(tmpfile)
+        pbar.close()
     q.shutdown()
-
 
 def simple_trace_run(q, payload, send_func):
     global null_hash
