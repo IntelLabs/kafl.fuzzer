@@ -331,13 +331,13 @@ def generate_traces_worker(config, pid, work_queue):
 
     # FIXME: really ugly switch between -trace and -dump_pt
     if dump_mode:
-        print("Tracing in '-trace' mode..")
+        logger.debug("Tracing in '-trace' mode..")
         # new dump_pt mode - translate to edge trace in separate step
         config.trace = True
         config.trace_cb = False
     else:
         # traditional -trace mode - more noisy and no bitmap to check
-        print("Tracing in legacy '-trace_cb' mode..")
+        logger.debug("Tracing in legacy '-trace_cb' mode..")
         config.trace = False
         config.trace_cb = True
 
@@ -354,7 +354,7 @@ def generate_traces_worker(config, pid, work_queue):
 
     try:
         for input_path, dump_file, trace_file in work_queue:
-            print("\nProcessing %s.." % os.path.basename(input_path))
+            logger.debug("\nProcessing %s.." % os.path.basename(input_path))
 
             if dump_mode:
                 # -trace mode (pt dump)
@@ -383,7 +383,7 @@ def generate_traces_worker(config, pid, work_queue):
                             subprocess.run(cmd, timeout=180)
                             os.unlink(pt_tmp.name)
                         except subprocess.TimeoutExpired as e:
-                            print(e)
+                            logger.warn(e)
                             os.unlink(pt_tmp.name)
                             continue
 
@@ -416,7 +416,7 @@ def simple_trace_run(q, payload, send_func):
     q.set_trace_mode(False)
 
     if not exec_res:
-        print("Failed to execute. Continuing anyway...\n")
+        logger.warn("Failed to execute. Continuing anyway...")
         assert(q.restart())
         return None
 
@@ -454,7 +454,7 @@ def funky_trace_run(q, input_path, retry=1):
         if hashes[h] >= 0.5*validations:
             return res
 
-    #print("Failed to get majority trace (retry=%d)\nHashes: %s\n" % (retry, str(hashes)))
+    #logger.warn("Failed to get majority trace (retry=%d)\nHashes: %s" % (retry, str(hashes)))
 
     if retry > 0:
         q.restart()
