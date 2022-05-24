@@ -110,10 +110,10 @@ class qemu:
 
         self.cmd.extend(["-m", str(config.qemu_memory)])
 
-        if self.debug_mode and self.config.log:
-            #self.cmd.extend("-trace", "events=/tmp/events"])
-            #self.cmd.extend("-d", "kafl", "-D", "self.qemu_trace_log"])
-            pass
+        if self.config.log:
+            self.cmd.extend(["-d", "nyx", "-D", self.qemu_trace_log])
+            #self.cmd.extend(["-d", "kafl,trace:kvm*"])
+            #self.cmd.extend(["-trace", "events=/tmp/events"])
 
         if self.config.gdbserver:
             self.cmd.extend(["-s", "-S"])
