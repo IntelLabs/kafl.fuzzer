@@ -261,11 +261,10 @@ class GuiDrawer:
             (15, "CPU Use", pnum(d.cpu_used()) + "%")])
             #(1 6, "", "")])
         self.gui.print_info_line([
-            #(16, "", ""),
-            (16, "User", pfloat(d.cpu_user()) + "%"),
+            (16, "", ""),
             (16, "AvgExec/s", pnum(d.execs_p_sec_avg())),
             (16, "Timeouts", pfloat(d.relative_timeouts()) + "%"),
-            (15, "Mem Use", pfloat(d.ram_used()) + "%")])
+            (15, "RAM Use", pnum(d.ram_used()) + "%")])
         self.gui.print_end_line()
         self.gui.print_header_line("Progress")
         self.gui.print_info_line([
@@ -582,7 +581,7 @@ class GuiData:
         return "%d(%d)" % (self.cores_phys, self.cores_virt)
 
     def cpu_cores(self):
-        return self.cores_phys
+        return self.cores_virt
 
     def cpu_used(self):
         return self.cpu.user + self.cpu.system
