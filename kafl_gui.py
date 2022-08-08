@@ -258,13 +258,12 @@ class GuiDrawer:
             (16, "CurExec/s", pnum(d.execs_p_sec_cur())),
             (16, "Funkiness", pfloat(d.relative_funky()) + "%"),
             #(16, "Reload/s", pnum(d.reload_p_sec()))])
-            (15, "CPU Use", pnum(d.cpu_used()) + "%")])
-            #(1 6, "", "")])
+            (15, "CPU Use", "%3d%%" % d.cpu_used())])
         self.gui.print_info_line([
-            (16, "", ""),
+            (16, "Est. Done", "%3d%%" % d.est_done()),
             (16, "AvgExec/s", pnum(d.execs_p_sec_avg())),
             (16, "Timeouts", pfloat(d.relative_timeouts()) + "%"),
-            (15, "RAM Use", pnum(d.ram_used()) + "%")])
+            (15, "RAM Use", "%3d%%" % d.ram_used())])
         self.gui.print_end_line()
         self.gui.print_header_line("Progress")
         self.gui.print_info_line([
@@ -549,6 +548,17 @@ class GuiData:
             return 100*((n-c)/n)**100
         except ZeroDivisionError:
             return 0
+
+    def est_done(self):
+        try:
+            favs_done = 100*self.fav_fin() / self.fav_total()
+        except ZeroDivisionError:
+            favs_done = 100
+        try:
+            norm_done = 100*self.normal_fin() / self.normal_total()
+        except ZeroDivisionError:
+            norm_done = 100
+        return 0.75*favs_done + 0.25*norm_done
 
     def total_reloads(self):
         return self.stats.get("num_reload", 0)
