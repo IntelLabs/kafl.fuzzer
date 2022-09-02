@@ -321,7 +321,9 @@ def generate_traces_worker(config, pid, work_queue):
         config.purge = True # not needed?
         qemu_id = 1337 # debug instance
 
-    prepare_working_dir(config)
+    if not prepare_working_dir(config):
+        logger.error("Failed to prepare working directory. Exit.")
+        return -1;
 
     work_dir = config.work_dir
     trace_dir = config.input + "/traces/"
@@ -479,13 +481,10 @@ def main():
     parser = ConfigArgsParser()
     config = parser.parse_debug_options()
 
+    init_logger(config)
+
     if not post_self_check(config):
         return -1
-
-    #print(repr(config))
-    #sys.exit(0)
-
-    init_logger(config)
 
     data_dir = config.input
 

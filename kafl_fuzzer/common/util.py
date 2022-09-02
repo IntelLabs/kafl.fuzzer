@@ -93,6 +93,10 @@ def prepare_working_dir(config):
                "/metadata", "/bitmaps", "/imports",
                "/snapshot", "/funky", "/traces", "/logs"]
 
+    if resume and purge:
+        logger.error("Cannot set both --purge and --resume at the same time. Abort.")
+        return False
+
     if purge:
         shutil.rmtree(work_dir, ignore_errors=True)
 
@@ -100,7 +104,7 @@ def prepare_working_dir(config):
         for folder in folders:
             os.makedirs(work_dir + folder, exist_ok=resume)
     except:
-        logger.error("Refuse to operate on existing work_dir without --purge or --resume")
+        logger.error("Refuse to operate on existing work_dir, supply either --purge or --resume.")
         return False
 
     return True
