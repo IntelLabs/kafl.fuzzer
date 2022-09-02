@@ -41,26 +41,26 @@ def graceful_exit(workers):
 
 def start(config):    
 
-    if not post_self_check(config):
-        logger.error("Startup checks failed. Exit.")
-        return -1
-        
-    if not prepare_working_dir(config):
-        logger.error("Refuse to operate on existing work directory. Use --purge to override.")
-        return 1
-
     work_dir   = config.work_dir
     seed_dir   = config.seed_dir
     num_worker = config.processes
 
     init_logger(config)
 
+    if not post_self_check(config):
+        logger.error("Startup checks failed. Exit.")
+        return -1
+
+    if not prepare_working_dir(config):
+        logger.error("Failed to prepare working directory. Exit.")
+        return -1;
+
     if seed_dir:
         if not copy_seed_files(work_dir, seed_dir):
             logger.error("Error when importing seeds. Exit.")
             return 1
     else:
-        logger.warn("Warning: Launching without -seed_dir?")
+        logger.warn("Warning: Launching without --seed-dir?")
         time.sleep(1)
 
     # Without -ip0, Qemu will not active PT tracing and we turn into a blind fuzzer

@@ -448,13 +448,17 @@ def verify_dbg(config, qemu_verbose=False):
 
 def start(config):
 
-    assert prepare_working_dir(config), "Failed to create work_dir %s" % config.work_dir
+    work_dir = config.work_dir
+
+    init_logger(config)
 
     if not post_self_check(config):
+        logger.error("Startup checks failed. Exit.")
         return -1
 
-    work_dir = config.work_dir
-    init_logger(config)
+    if not prepare_working_dir(config):
+        logger.error("Failed to prepare working directory. Exit.")
+        return -1;
 
     # Without -ip0, Qemu will not active PT tracing and Redqueen will not
     # attempt to handle debug traps. This is a requirement for modes like gdb.
