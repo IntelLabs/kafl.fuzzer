@@ -412,6 +412,8 @@ class qemu:
                 continue
             if result.exec_code == RC.ABORT:
                 self.handle_habort()
+            if result.exec_done:
+                break
 
         logger.info("%s Result: %s\n" % (self, self.exit_reason(result)))
         #self.audit(result)
