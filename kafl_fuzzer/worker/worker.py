@@ -301,7 +301,7 @@ class WorkerTask:
 
         if timeout:
             old_timeout = self.q.get_timeout()
-            self.q.set_timeout(0)
+            self.q.set_timeout(timeout)
 
         exec_res = self.__execute(data)
         self.statistics.event_exec(bb_cov=self.q.bb_seen)
