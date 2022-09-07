@@ -190,13 +190,6 @@ class qemu:
             footer = "====================</Console Output>======================\n"
             logger.file_log("INFO", header + output + footer)
 
-        # on full debug, also include the serial log at point of Qemu exit
-        serial_out = strdump(read_binary_file(self.serial_logfile), verbatim=True)
-        if len(serial_out) > 0:
-            header = "\n=================<%s Serial Output>==================\n" % self
-            footer = "====================</Serial Output>======================\n"
-            logger.file_log("INFO", header + serial_out + footer)
-
         try:
             # TODO: exec_res keeps from_buffer() reference to kafl_shm
             self.kafl_shm.close()
