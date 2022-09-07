@@ -191,9 +191,8 @@ class qemu:
             logger.file_log("INFO", header + output + footer)
 
         try:
-            # TODO: exec_res keeps from_buffer() reference to kafl_shm
             self.kafl_shm.close()
-        except BufferError as e:
+        except (BufferError, AttributeError):
             pass
 
         try:
@@ -273,7 +272,7 @@ class qemu:
             self.__qemu_handshake()
         except (OSError, BrokenPipeError) as e:
             if not self.exiting:
-                logger.error("%s Failed to launch Qemu: %s" % (self, str(e)))
+                logger.error("%s Failed to connect to Qemu: %s" % (self, str(e)))
                 self.shutdown()
             return False
 
@@ -328,18 +327,19 @@ class qemu:
         self.control.settimeout(None)
         self.control.setblocking(1)
 
-        # TODO: Don't try forever, set some timeout..
-        while True:
+        # Wait for the socket to appear. Fail early if Qemu is done and we get no socket.
+        retry_timeout = 6
+        retry_interval = 0.1
+        for _ in range(int(retry_timeout/retry_interval)):
             try:
                 self.control.connect(self.control_filename)
-                break
-            except socket.error:
-                if self.process.returncode is not None:
-                    raise
+                return True
+            except socket.error as e:
+                if self.process.poll() is not None:
+                    logger.error("%s Aborting due to unexpected Qemu exit." % self)
+                    raise e
             logger.debug("%s Waiting for Qemu connect.." % self)
-            time.sleep(0.1)
-
-
+            time.sleep(retry_interval)
 
     def store_crashlogs(self, label, stamp):
         # Collect current/accumulated logs
