@@ -5,33 +5,42 @@
 # Copyright 2020 Intel Corporation
 # SPDX-License-Identifier: MIT
 
-GHIDRA_ROOT=~/ghidra_10.1.3_PUBLIC
+set -e
 
+function fail {
+	echo
+	echo -e "Error: $1"
+	echo
+	echo -e "Usage:\n\t$0 <kafl_workdir> <target_binary> <script>"
+	echo
+	exit 1
+}
+
+# check for kAFL workspace env vars
+if [ -z ${KAFL_ROOT+x} ]; then
+	fail "kAFL workspace env vars not found. Use make env first"
+	exit 1
+fi
+
+set -u
+
+BIN=$GHIDRA_ROOT/support/analyzeHeadless
+
+# check ghidra bin
+test -f "$BIN"     || fail "Missing ghidra executable $BIN. Check kAFL deployment."
+
+test $# -eq 3 || fail "Missing arguments."
 
 WORKDIR="$(realpath $1)" # kAFL work dir with traces/ folder
 TARGET="$(realpath $2)"  # original target input (tested with basic ELF file loaded as -kernel)
 SCRIPT="$(realpath $3)"  # script to run
 
-BIN=$GHIDRA_ROOT/support/analyzeHeadless
 PROJDIR=$WORKDIR/traces/ghidra
 PROJ=cov_analysis
 
-function fail {
-	echo
-	echo -e "$1"
-	echo
-	echo -e "Usage:\n\t$0 <kafl_workdir> <target_binary> <script>"
-	echo
-	exit
-}
-
-test $# -eq 3 || fail "Missing arguments."
-
 test -d $PROJDIR || mkdir $PROJDIR
-test -f "$BIN"     || fail "Missing ghidra executable $BIN. Try ghidra_install.sh"
-test -d "$PROJDIR" || fail "Missing ghidra workdir $PROJDIR"
 test -f "$TARGET"  || fail "Could not find target binary at $TARGET"
-test -f "$SCRIPT"  || fail "Could not find coverage anaylsis script at $SCRIPT"
+test -f "$SCRIPT"  || fail "Could not find coverage analysis script at $SCRIPT"
 
 # Check if traces have been generated and optionally create unique edges file
 test -d "$WORKDIR/traces/" || fail "Could not find traces/ folder in workdir."
