@@ -154,8 +154,6 @@ def add_args_fuzzer(parser):
 def add_args_qemu(parser):
 
     config_default_base   = '-enable-kvm -machine kAFL64-v1 -cpu kAFL64-Hypervisor-v1,+vmx -no-reboot -net none -display none'
-    config_default_serial = '-device isa-serial,chardev=kafl_serial'
-    config_default_append = 'nokaslr oops=panic nopti mitigations=off console=ttyS0'
 
     # BIOS/Image/Kernel load modes are partly exclusive, but we need at least one of them
     parser.add_argument('--image', dest='qemu_image', metavar='<qcow2>', required=False, action=FullPath, 
@@ -169,14 +167,14 @@ def add_args_qemu(parser):
     parser.add_argument('--initrd', dest='qemu_initrd', metavar='<file>', required=False, action=FullPath, type=parse_is_file,
                         help='path to the initrd/initramfs file.')
     parser.add_argument('--append', dest='qemu_append', metavar='<str>', help='Qemu -append option',
-                        type=str, required=False, default=config_default_append)
+                        type=str, required=False, default=None)
     parser.add_argument('-m', '--memory', dest='qemu_memory', metavar='<n>', help='size of VM RAM in MB (default: 256).',
                         default=256, type=int)
 
     parser.add_argument('--qemu-base', metavar='<str>', help='base Qemu config (check defaults!)',
                         type=str, required=False, default=config_default_base)
     parser.add_argument('--qemu-serial', metavar='<str>', help='Qemu serial emulation (redirected to file, see defaults)',
-                        type=str, required=False, default=config_default_serial)
+                        type=str, required=False, default=None)
     parser.add_argument('--qemu-extra', metavar='<str>', help='extra Qemu config (check defaults!)',
                         type=str, required=False, default=None)
     parser.add_argument('--qemu-path', metavar='<file>', help=hidden('path to Qemu-Nyx executable'),
