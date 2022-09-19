@@ -19,7 +19,7 @@ import sys
 
 from kafl_fuzzer.common.logger import init_logger, logger
 from kafl_fuzzer.common.self_check import post_self_check
-from kafl_fuzzer.common.util import prepare_working_dir, copy_seed_files, qemu_sweep
+from kafl_fuzzer.common.util import prepare_working_dir, copy_seed_files, qemu_sweep, filter_available_cpus
 from kafl_fuzzer.manager.manager import ManagerTask
 from kafl_fuzzer.worker.worker import worker_loader
 
@@ -67,6 +67,7 @@ def start(config):
     if not config.ip0:
         logger.warn("No PT trace region defined.")
 
+    filter_available_cpus()
     manager = ManagerTask(config)
 
     workers = []

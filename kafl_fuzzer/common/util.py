@@ -39,6 +39,18 @@ def qemu_sweep(msg):
     if (len(pids) > 0):
         logger.warn(msg + " " + repr(pids))
 
+# limit ourselves to CPUs not hogged by possible other qemu instances
+def filter_available_cpus():
+    def get_qemu_processes():
+        for proc in psutil.process_iter(['pid', 'name']):
+            if 'qemu-system-x86_64' in proc.info['name']:
+                yield (proc.info['pid'])
+
+    cpus = os.sched_getaffinity(0)
+    for pid in get_qemu_processes():
+        cpus -= os.sched_getaffinity(pid)
+    os.sched_setaffinity(0,cpus)
+
 # pretty-printed hexdump
 def hexdump(src, length=16):
     hexdump_filter = ''.join([(len(repr(chr(x))) == 3) and chr(x) or '.' for x in range(256)])

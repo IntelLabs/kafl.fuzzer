@@ -17,7 +17,6 @@ import sys
 import shutil
 import tempfile
 
-import psutil
 import lz4.frame as lz4
 
 #from kafl_fuzzer.common.config import FuzzerConfiguration
@@ -119,10 +118,19 @@ class WorkerTask:
 
         signal.signal(signal.SIGTERM, sigterm_handler)
         os.setpgrp()
-
-        psutil.Process().cpu_affinity([self.pid + self.config.cpu_offset])
         rand.reseed()
 
+        # pin worker N to the Nth available CPU of this task group
+        try:
+            cpu_offset = self.config.cpu_offset + self.pid
+            cpu = sorted(os.sched_getaffinity(0))[cpu_offset]
+            os.sched_setaffinity(0, [cpu])
+        except Exception:
+            logger.error("%s failed to set CPU affinity to %d out of %d. Aborting.."
+                    % (self, cpu_offset, len(os.sched_getaffinity(0))))
+            return
+
+        # start Qemu and commence main worker loop
         try:
             if self.q.start():
                 self.loop()
