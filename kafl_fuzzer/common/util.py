@@ -50,6 +50,7 @@ def filter_available_cpus():
     for pid in get_qemu_processes():
         cpus -= os.sched_getaffinity(pid)
     os.sched_setaffinity(0,cpus)
+    return cpus
 
 # pretty-printed hexdump
 def hexdump(src, length=16):

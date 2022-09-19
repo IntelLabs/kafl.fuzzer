@@ -67,7 +67,11 @@ def start(config):
     if not config.ip0:
         logger.warn("No PT trace region defined.")
 
-    filter_available_cpus()
+    cpus = filter_available_cpus()
+    if num_worker > len(cpus):
+        logger.error(f"Requested {num_worker} but only {len(cpus)} free CPUs detected. Abort.")
+        return -1
+
     manager = ManagerTask(config)
 
     workers = []
