@@ -6,6 +6,7 @@
 import argparse
 import os
 import re
+import sys
 import logging
 import confuse
 from flatdict import FlatDict
@@ -234,22 +235,31 @@ class ConfigArgsParser():
 
         config = confuse.Configuration('kafl', modname='kafl_fuzzer')
 
-        # check default config search paths
+        # check default config locations
         config.read(defaults=True, user=True)
-
-        # local / workdir config
-        workdir_config = os.path.join(os.getcwd(), 'kafl.yaml')
-        if os.path.exists(workdir_config):
-            config.set_file(workdir_config)
 
         # ENV based config
         if 'KAFL_CONFIG_FILE' in os.environ:
-            config.set_file(os.environ['KAFL_CONFIG_FILE'])
+            try:
+                logger.debug(f"Checking configuration at KAFL_CONFIG_FILE: {os.environ['KAFL_CONFIG_FILE']}")
+                config.set_file(os.environ['KAFL_CONFIG_FILE'])
+            except confuse.exceptions.ConfigError:
+                logger.exception("Failed to read configuration at $KAFL_CONFIG_FILE")
+                sys.exit(1)
+
+        # local / workdir config
+        workdir_config = os.path.join(os.getcwd(), 'kafl.yaml')
+        logger.debug(f"Checking configuration at CWD: {workdir_config}")
+        if os.path.exists(workdir_config):
+            try:
+                config.set_file(workdir_config)
+            except confuse.exceptions.ConfigError:
+                logger.exception("Failed to read configuration at $CWD")
+                sys.exit(1)
 
         # merge all configs into a flat dictionary, delimiter = ':'
         config_values = FlatDict(config.flatten())
-        if 'KAFL_CONFIG_DEBUG' in os.environ:
-            print("Options picked up from config: %s" % str(config_values))
+        logger.debug("Options picked up from config: %s" % str(config_values))
 
         # adopt defaults into parser, fixup 'required' and file/path fields
         for action in parser._actions:
@@ -267,17 +277,15 @@ class ConfigArgsParser():
         
         # remove options not defined in argparse (set_defaults() imports everything)
         for option in config_values:
-            if 'KAFL_CONFIG_DEBUG' in os.environ:
-                logger.warn("Dropping unrecognized option '%s'." % option)
+            logger.debug("Dropped unrecognized option '%s'." % option)
             config_values.pop(option)
 
         # allow unrecognized options?
         #parser.set_defaults(**config_values)
 
         args = parser.parse_args()
+        logger.debug("Final parsed args: %s" % str(vars(args)))
 
-        if 'KAFL_CONFIG_DEBUG' in os.environ:
-            print("Final parsed args: %s" % repr(args))
         return args
 
     def parse_fuzz_options(self):
