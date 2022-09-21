@@ -9,11 +9,8 @@ set -e
 set -u
 
 function fail {
-	echo
-	echo -e "Error: $1"
-	echo
-	echo -e "Usage:\n\t$0 <kafl_workdir> <target_binary> <script>"
-	echo
+	echo -e "\nError: $@\n" >&2
+	echo -e "Usage:\n\t$0 <kafl_workdir> <target_binary> <script>\n" >&2
 	exit 1
 }
 
