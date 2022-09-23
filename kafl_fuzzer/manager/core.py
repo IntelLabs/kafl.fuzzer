@@ -19,7 +19,7 @@ import sys
 
 from kafl_fuzzer.common.logger import init_logger, logger
 from kafl_fuzzer.common.self_check import post_self_check
-from kafl_fuzzer.common.util import prepare_working_dir, copy_seed_files, qemu_sweep
+from kafl_fuzzer.common.util import prepare_working_dir, copy_seed_files, qemu_sweep, filter_available_cpus
 from kafl_fuzzer.manager.manager import ManagerTask
 from kafl_fuzzer.worker.worker import worker_loader
 
@@ -66,6 +66,11 @@ def start(config):
     # Without -ip0, Qemu will not active PT tracing and we turn into a blind fuzzer
     if not config.ip0:
         logger.warn("No PT trace region defined.")
+
+    cpus = filter_available_cpus()
+    if num_worker > len(cpus):
+        logger.error(f"Requested {num_worker} but only {len(cpus)} free CPUs detected. Abort.")
+        return -1
 
     manager = ManagerTask(config)
 
