@@ -12,8 +12,9 @@ from threading import Thread
 from pprint import pformat
 
 import kafl_fuzzer.common.color as color
+from kafl_fuzzer.common.util import print_banner
 from kafl_fuzzer.common.logger import setup_logging
-from kafl_fuzzer.common.self_check import post_self_check
+from kafl_fuzzer.common.self_check import self_check, post_self_check
 from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_sweep
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu import qemu
@@ -426,6 +427,10 @@ def verify_dbg(config, qemu_verbose=False):
 
 
 def start(config):
+    print_banner("kAFL Debugger")
+
+    if not self_check():
+        return 1
 
     if not post_self_check(config):
         logger.error("Startup checks failed. Exit.")

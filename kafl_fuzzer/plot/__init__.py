@@ -131,8 +131,8 @@ def main(workdir, outfile=None):
     dot = Graph(workdir, outfile)
     dot.process_once()
 
-if __name__ == "__main__":
 
+def start():
     print_banner("kAFL Plotter")
 
     if (len(sys.argv) == 2):   main(sys.argv[1])

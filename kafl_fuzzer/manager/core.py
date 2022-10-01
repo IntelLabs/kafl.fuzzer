@@ -20,7 +20,8 @@ import sys
 import logging
 from pprint import pformat
 
-from kafl_fuzzer.common.self_check import post_self_check
+from kafl_fuzzer.common.util import print_banner
+from kafl_fuzzer.common.self_check import self_check, post_self_check
 from kafl_fuzzer.common.util import prepare_working_dir, copy_seed_files, qemu_sweep, filter_available_cpus
 from kafl_fuzzer.common.logger import setup_logging
 from kafl_fuzzer.manager.manager import ManagerTask
@@ -44,7 +45,12 @@ def graceful_exit(workers):
                 workers.remove(s)
 
 
-def start(config):    
+def start(config):
+
+    print_banner("kAFL Fuzzer")
+
+    if not self_check():
+        return 1
 
     work_dir   = config.work_dir
     seed_dir   = config.seed_dir

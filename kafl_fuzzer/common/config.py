@@ -9,9 +9,25 @@ import re
 import sys
 import logging
 import confuse
+from enum import Enum, auto
+from argparse import _SubParsersAction, ArgumentParser
 from flatdict import FlatDict
+from typing import Any
 
+from kafl_fuzzer.manager.core import start as fuzz_start
+from kafl_fuzzer.debug.core import start as debug_start
+from kafl_fuzzer.coverage import start as cov_start
+from kafl_fuzzer.gui import start as gui_start
+from kafl_fuzzer.plot import start as plot_start
+from kafl_fuzzer.mcat import start as mcat_start
 
+class KaflSubcommands(Enum):
+    FUZZ = auto()
+    DEBUG = auto()
+    COV = auto()
+    GUI = auto()
+    PLOT = auto()
+    MCAT = auto()
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +241,23 @@ def add_args_debug(parser):
                         type=parse_is_file, required=True, default=None)
 
 
-class ConfigArgsParser():
+class ConfigParserBuilder():
+
+    def __call__(self, *args: Any, **kwds: Any) -> ArgumentParser:
+        parser = self._base_parser()
+        # add General args
+        general_grp = parser.add_argument_group('General options')
+        add_args_general(general_grp)
+        # enable subcommands
+        subcommands = parser.add_subparsers()
+        # add subcommands
+        self._add_fuzz_subcommand(subcommands)
+        self._add_debug_subcommand(subcommands)
+        self._add_cov_subcommand(subcommands)
+        self._add_gui_subcommand(subcommands)
+        self._add_plot_subcommand(subcommands)
+        self._add_mcat_subcommand(subcommands)
+        return parser
 
     def _base_parser(self):
         short_usage = '%(prog)s --work-dir <dir> [fuzzer options] [qemu options]'
@@ -288,32 +320,50 @@ class ConfigArgsParser():
 
         return args
 
-    def parse_fuzz_options(self):
+    def _add_fuzz_subcommand(self, parser: _SubParsersAction):
+        fuzz_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.FUZZ.name.lower(), help="kAFL Duzzer")
 
-        parser = self._base_parser()
+        fuzzer_grp = fuzz_subcommand.add_argument_group('Fuzzer options')
+        add_args_fuzzer(fuzzer_grp)
 
-        general = parser.add_argument_group('General options')
-        add_args_general(general)
+        qemu_grp = fuzz_subcommand.add_argument_group('Qemu/Nyx options')
+        add_args_qemu(qemu_grp)
 
-        fuzzer = parser.add_argument_group('Fuzzer options')
-        add_args_fuzzer(fuzzer)
+        fuzz_subcommand.set_defaults(func=fuzz_start)
 
-        qemu = parser.add_argument_group('Qemu/Nyx options')
-        add_args_qemu(qemu)
+    def _add_debug_subcommand(self, parser: _SubParsersAction):
+        debug_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.DEBUG.name.lower(), help="kAFL Debugger")
 
-        return self._parse_with_config(parser)
+        debug_grp = debug_subcommand.add_argument_group("Debug options")
+        add_args_debug(debug_grp)
 
-    def parse_debug_options(self):
+        qemu_grp = debug_subcommand.add_argument_group('Qemu/Nyx options')
+        add_args_qemu(qemu_grp)
 
-        parser = self._base_parser()
+        debug_subcommand.set_defaults(func=debug_start)
 
-        general = parser.add_argument_group('General options')
-        add_args_general(general)
+    def _add_cov_subcommand(self, parser: _SubParsersAction):
+        cov_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.COV.name.lower(), help="kAFL Coverage Analyzer")
 
-        debugger = parser.add_argument_group('Debug options')
-        add_args_debug(debugger)
+        debug_grp = cov_subcommand.add_argument_group("Debug options")
+        add_args_debug(debug_grp)
 
-        qemu = parser.add_argument_group('Qemu options')
-        add_args_qemu(qemu)
+        qemu_grp = cov_subcommand.add_argument_group('Qemu/Nyx options')
+        add_args_qemu(qemu_grp)
 
-        return self._parse_with_config(parser)
+        cov_subcommand.set_defaults(func=cov_start)
+
+    def _add_gui_subcommand(self, parser: _SubParsersAction):
+        gui_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.GUI.name.lower(), help="kAFL GUI")
+
+        gui_subcommand.set_defaults(func=gui_start)
+
+    def _add_plot_subcommand(self, parser: _SubParsersAction):
+        plot_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.PLOT.name.lower(), help="kAFL Plotter")
+
+        plot_subcommand.set_defaults(func=plot_start)
+
+    def _add_mcat_subcommand(self, parser: _SubParsersAction):
+        mcat_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.MCAT.name.lower(), help="kAFL msgpack Pretty-Printer")
+
+        mcat_subcommand.set_defaults(func=mcat_start)

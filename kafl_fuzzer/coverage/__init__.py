@@ -31,7 +31,6 @@ import lz4.frame as lz4
 from tqdm import tqdm
 from math import ceil
 
-from kafl_fuzzer.common.config import ConfigArgsParser
 from kafl_fuzzer.common.self_check import self_check, post_self_check
 from kafl_fuzzer.common.logger import setup_logging
 from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_sweep, print_banner
@@ -471,7 +470,7 @@ def funky_trace_run(q, input_path, retry=1):
 
     return None
 
-def main():
+def start(args):
     global null_hash
 
     print_banner("kAFL Coverage Analyzer")
@@ -479,17 +478,14 @@ def main():
     if not self_check():
         return -1
 
-    parser = ConfigArgsParser()
-    config = parser.parse_debug_options()
-
-    if not post_self_check(config):
+    if not post_self_check(args):
         return -1
 
-    data_dir = config.input
+    data_dir = args.input
 
-    null_hash = ExecutionResult.get_null_hash(config.bitmap_size)
+    null_hash = ExecutionResult.get_null_hash(args.bitmap_size)
 
-    nproc = min(config.processes, os.cpu_count())
+    nproc = min(args.processes, os.cpu_count())
     logger.info("Using %d/%d cores..." % (nproc, os.cpu_count()))
 
     logger.info("Scanning target data_dir »%s«..." % data_dir)
@@ -497,7 +493,7 @@ def main():
 
     start = time.time()
     logger.info("Generating traces...")
-    trace_dir = generate_traces(config, nproc, input_list)
+    trace_dir = generate_traces(args, nproc, input_list)
     end = time.time()
     logger.info("\n\nDone. Time taken: %.2fs\n" % (end - start))
 
@@ -511,10 +507,5 @@ def main():
 
     # generate basic summary files
     trace_parser.gen_reports()
-
-    return 0
-
-if __name__ == "__main__":
-    ret = main()
     qemu_sweep("Detected potential qemu zombies, please kill -9:")
-    sys.exit(ret)
+    return 0

@@ -12,11 +12,11 @@ Given a kAFL workdir, produce a text-based UI with status summary/overview.
 import curses
 import glob
 import locale
-import os
 import string
 import sys
 import time
 from threading import Thread, Lock
+from argparse import Namespace
 
 import inotify.adapters
 import msgpack
@@ -806,13 +806,13 @@ def main(stdscr):
     gui = GuiDrawer(sys.argv[1], stdscr)
     gui.loop()
 
-if __name__ == "__main__":
+
+def start(args: Namespace):
 
     locale.setlocale(locale.LC_ALL, '')
-    code = locale.getpreferredencoding()
 
-    if len(sys.argv) < 2 or not os.path.exists(sys.argv[1]):
-        print("Usage:\n\t" + sys.argv[0] + " <kafl-workdir>\n")
+    if not args.work_dir:
+        print("Usage:\n\t kafl gui <kafl-workdir>\n")
         sys.exit(1)
 
     try:
