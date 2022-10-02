@@ -16,12 +16,15 @@ import subprocess
 import sys
 import time
 import shutil
+import logging
 
-from kafl_fuzzer.common.logger import logger
+from kafl_fuzzer.common.util import strdump, print_hprintf
 from kafl_fuzzer.technique.redqueen.workdir import RedqueenWorkdir
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu_aux_buffer import QemuAuxBuffer
 from kafl_fuzzer.worker.qemu_aux_buffer import QemuAuxRC as RC
+
+logger = logging.getLogger(__name__)
 
 class QemuIOException(Exception):
         """Exception raised when Qemu interaction fails"""

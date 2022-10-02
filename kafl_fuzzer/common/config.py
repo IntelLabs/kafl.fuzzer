@@ -6,13 +6,13 @@
 import argparse
 import os
 import re
-
+import logging
 import confuse
 from flatdict import FlatDict
 
-from kafl_fuzzer.common.logger import logger
 
 
+logger = logging.getLogger(__name__)
 
 class ExpandVars(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):

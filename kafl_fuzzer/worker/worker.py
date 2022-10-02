@@ -16,11 +16,10 @@ import signal
 import sys
 import shutil
 import tempfile
-
+import logging
 import lz4.frame as lz4
 
 #from kafl_fuzzer.common.config import FuzzerConfiguration
-from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.common.rand import rand
 from kafl_fuzzer.manager.bitmap import BitmapStorage, GlobalBitmap
 from kafl_fuzzer.manager.communicator import ClientConnection, MSG_IMPORT, MSG_RUN_NODE, MSG_BUSY
@@ -29,6 +28,8 @@ from kafl_fuzzer.manager.statistics import WorkerStatistics
 from kafl_fuzzer.worker.state_logic import FuzzingStateLogic
 from kafl_fuzzer.worker.qemu import QemuIOException
 from kafl_fuzzer.worker.qemu import qemu as Qemu
+
+logger = logging.getLogger(__name__)
 
 def worker_loader(pid, config):
     logger.debug("Worker-%02d PID: %d" % (pid, os.getpid()))

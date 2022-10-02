@@ -8,8 +8,8 @@ Main logic used by Worker to push nodes through various fuzzing stages/mutators.
 """
 
 import time
+import logging
 
-from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.common.rand import rand
 from kafl_fuzzer.technique.grimoire_inference import GrimoireInference
 from kafl_fuzzer.technique.redqueen.colorize import ColorizerStrategy
@@ -23,6 +23,7 @@ from kafl_fuzzer.technique import grimoire_mutations as grimoire
 #import kafl_fuzzer.technique.radamsa as radamsa
 #import kafl_fuzzer.technique.interesting_values as interesting_values
 
+logger = logging.getLogger(__name__)
 
 class FuzzingStateLogic:
     HAVOC_MULTIPLIER = 4

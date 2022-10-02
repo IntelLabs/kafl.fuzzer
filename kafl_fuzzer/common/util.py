@@ -9,12 +9,14 @@ import sys
 import tempfile
 import string
 import getpass
+import logging
 from shutil import copyfile
 
 import psutil
 
 import kafl_fuzzer.common.color as color
-from kafl_fuzzer.common.logger import logger
+
+logger = logging.getLogger(__name__)
 
 class Singleton(type):
     _instances = {}

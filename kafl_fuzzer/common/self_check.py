@@ -7,11 +7,12 @@ import os
 import sys
 import subprocess
 import multiprocessing
+import logging
 from fcntl import ioctl
 
-from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.native import loader as native_loader
 
+logger = logging.getLogger(__name__)
 
 def check_if_nativ_lib_compiled():
     return native_loader.test_build()

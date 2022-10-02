@@ -7,11 +7,12 @@
 Grimoire grammar-based mutations (havoc stage)
 """
 
+import logging
 from kafl_fuzzer.common.rand import rand
 
 CHOOSE_SUBINPUT = 50
 RECURSIVE_REPLACEMENT_DEPTH = [2, 4, 8, 16, 32, 64]
-
+logger = logging.getLogger(__name__)
 
 def filter_gap_indices(generalized_input):
     return [index for index in range(len(generalized_input)) if generalized_input[index] == b'']

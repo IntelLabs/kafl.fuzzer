@@ -16,12 +16,16 @@ Prepare the kAFL workdir and copy any provided seeds to be picked up by the sche
 import multiprocessing
 import time
 import sys
+import logging
+from pprint import pformat
 
-from kafl_fuzzer.common.logger import init_logger, logger
 from kafl_fuzzer.common.self_check import post_self_check
 from kafl_fuzzer.common.util import prepare_working_dir, copy_seed_files, qemu_sweep, filter_available_cpus
+from kafl_fuzzer.common.logger import setup_logging
 from kafl_fuzzer.manager.manager import ManagerTask
 from kafl_fuzzer.worker.worker import worker_loader
+
+logger = logging.getLogger(__name__)
 
 def graceful_exit(workers):
     for s in workers:
@@ -45,8 +49,6 @@ def start(config):
     seed_dir   = config.seed_dir
     num_worker = config.processes
 
-    init_logger(config)
-
     if not post_self_check(config):
         logger.error("Startup checks failed. Exit.")
         return -1
@@ -54,6 +56,12 @@ def start(config):
     if not prepare_working_dir(config):
         logger.error("Failed to prepare working directory. Exit.")
         return -1;
+
+    # initialize logger after work_dir purge
+    # otherwise the file handler created is removed
+    setup_logging(config)
+    # log config parameters
+    logging.debug(pformat(config))
 
     if seed_dir:
         if not copy_seed_files(work_dir, seed_dir):

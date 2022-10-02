@@ -6,12 +6,12 @@
 import os
 import shutil
 import time
+import logging
 from sys import stdout
 from threading import Thread
 from pprint import pformat
 
 import kafl_fuzzer.common.color as color
-from kafl_fuzzer.common.logger import init_logger, logger
 from kafl_fuzzer.common.self_check import post_self_check
 from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_sweep
 from kafl_fuzzer.worker.execution_result import ExecutionResult
@@ -19,6 +19,7 @@ from kafl_fuzzer.worker.qemu import qemu
 from kafl_fuzzer.technique.redqueen import parser
 from kafl_fuzzer.technique.redqueen.hash_fix import HashFixer
 
+logger = logging.getLogger(__name__)
 REFRESH = 0.25
 
 
