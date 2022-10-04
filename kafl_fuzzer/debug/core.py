@@ -12,6 +12,7 @@ from threading import Thread
 from pprint import pformat
 
 import kafl_fuzzer.common.color as color
+from kafl_fuzzer.common.logger import setup_logging
 from kafl_fuzzer.common.self_check import post_self_check
 from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_sweep
 from kafl_fuzzer.worker.execution_result import ExecutionResult
@@ -444,8 +445,6 @@ def verify_dbg(config, qemu_verbose=False):
 
 def start(config):
 
-    init_logger(config)
-
     if not post_self_check(config):
         logger.error("Startup checks failed. Exit.")
         return -1
@@ -453,6 +452,12 @@ def start(config):
     if not prepare_working_dir(config):
         logger.error("Failed to prepare working directory. Exit.")
         return -1;
+
+    # initialize logger after work_dir purge
+    # otherwise the file handler created is removed
+    setup_logging(config)
+    # log config parameters
+    logging.debug(pformat(config))
 
     # Without -ip0, Qemu will not active PT tracing and Redqueen will not
     # attempt to handle debug traps. This is a requirement for modes like gdb.
