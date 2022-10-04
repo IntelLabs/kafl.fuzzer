@@ -23,8 +23,7 @@ from kafl_fuzzer.technique.redqueen.workdir import RedqueenWorkdir
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu_aux_buffer import QemuAuxBuffer
 from kafl_fuzzer.worker.qemu_aux_buffer import QemuAuxRC as RC
-
-logger = logging.getLogger(__name__)
+from kafl_fuzzer.common.logger import WorkerLogAdapter
 
 class QemuIOException(Exception):
         """Exception raised when Qemu interaction fails"""
@@ -46,6 +45,8 @@ class qemu:
         self.alt_bitmap = bytearray(self.bitmap_size)
         self.alt_edges = 0
         self.bb_seen = 0
+        self.logger_no_prefix = logging.getLogger(__name__)
+        self.logger = WorkerLogAdapter(self.logger_no_prefix, {'pid': self.pid})
 
         self.process = None
         self.control = None
@@ -149,9 +150,6 @@ class qemu:
             # boot and wait for snapshot creation (or load from existing file)
             self.cmd.append("path=%s,load=on" % (snapshot_path))
 
-    def __str__(self):
-        return "Worker-%02d" % self.pid
-
     # Asynchronous exit by Worker. Note this may be called multiple times
     # while we were in the middle of shutdown(), start(), send_payload(), ..
     def async_exit(self):
@@ -163,7 +161,7 @@ class qemu:
 
 
     def shutdown(self):
-        logger.info("%s Shutting down Qemu after %d execs.." % (self, self.persistent_runs))
+        self.logger.info("Shutting down Qemu after %d execs..", self.persistent_runs)
 
         if not self.process:
             # start() has never been called, all files/shm are closed.
@@ -184,12 +182,12 @@ class qemu:
             except:
                 pass
 
-        logger.file_log("INFO", "%s exit code: %s" % (self, str(self.process.returncode)))
+        self.logger.info("exit code: %s", str(self.process.returncode))
 
         if len(output) > 0:
             header = "\n=================<%s Console Output>==================\n" %self
             footer = "====================</Console Output>======================\n"
-            logger.file_log("INFO", header + output + footer)
+            self.logger.info(header + output + footer)
 
         try:
             self.kafl_shm.close()
@@ -255,7 +253,7 @@ class qemu:
         if self.pid not in [0, 1337]:
             time.sleep(4 + 0.1*self.pid)
 
-        logger.info("%s Launching virtual machine...%s" % (self, final_cmdline))
+        self.logger.info("Launching virtual machine...%s", final_cmdline)
 
 
         # Launch Qemu. stderr to stdout, stdout is logged on VM exit
@@ -273,11 +271,11 @@ class qemu:
             self.__qemu_handshake()
         except (OSError, BrokenPipeError) as e:
             if not self.exiting:
-                logger.error("%s Failed to connect to Qemu: %s" % (self, str(e)))
+                self.logger.error("Failed to connect to Qemu: %s", str(e))
                 self.shutdown()
             return False
 
-        logger.debug("%s Handshake done." % self)
+        self.logger.debug("Handshake done.")
 
         # for -R = {0,1}, set reload_mode here just once
         if self.config.reload == 1:
@@ -302,11 +300,11 @@ class qemu:
 
         self.qemu_aux_buffer = QemuAuxBuffer(self.qemu_aux_buffer_filename)
         if not self.qemu_aux_buffer.validate_header():
-            logger.error("%s Invalid header in qemu_aux_buffer.py. Abort." % self)
+            self.logger.error("Invalid header in qemu_aux_buffer.py. Abort.")
             self.async_exit()
 
         while self.qemu_aux_buffer.get_state() != 3:
-            logger.debug("%s Waiting for target to enter fuzz mode.." % self)
+            self.logger.debug("Waiting for target to enter fuzz mode..")
             result = self.qemu_aux_buffer.get_result()
             if result.exec_code == RC.ABORT:
                 self.handle_habort()
@@ -337,9 +335,9 @@ class qemu:
                 return True
             except socket.error as e:
                 if self.process.poll() is not None:
-                    logger.error("%s Aborting due to unexpected Qemu exit." % self)
+                    self.logger.error("Aborting due to unexpected Qemu exit.")
                     raise e
-            logger.debug("%s Waiting for Qemu connect.." % self)
+            self.logger.debug("Waiting for Qemu connect..")
             time.sleep(retry_interval)
 
     def store_crashlogs(self, label, stamp):
@@ -370,7 +368,7 @@ class qemu:
         msg = msg.decode('latin-1', errors='backslashreplace')
         msg = "Guest ABORT: %s" % msg
 
-        logger.error("%s Guest ABORT: %s" % (self, msg))
+        self.logger.error("Guest ABORT: %s", msg)
         if self.hprintf_log:
             with open(self.hprintf_logfile, "a") as f:
                 f.write(msg)
@@ -398,9 +396,9 @@ class qemu:
             self.run_qemu()
             result = self.qemu_aux_buffer.get_result()
             if result.page_fault:
-                logger.warn("%s Unhandled page fault in debug mode!" % self)
+                self.logger.warn("Unhandled page fault in debug mode!")
             if result.pt_overflow:
-                logger.warn("%s PT trashed!" % self)
+                self.logger.warn("PT trashed!")
             if result.exec_code == RC.HPRINTF:
                 self.handle_hprintf()
                 continue
@@ -409,7 +407,7 @@ class qemu:
             if result.exec_done:
                 break
 
-        logger.info("%s Result: %s\n" % (self, self.exit_reason(result)))
+        self.logger.info("Result: %s\n", self.exit_reason(result))
         #self.audit(result)
         return result
 
@@ -441,7 +439,7 @@ class qemu:
             result = self.qemu_aux_buffer.get_result()
 
             if result.pt_overflow:
-                logger.warn("PT trashed!")
+                self.logger.warn("PT trashed!")
 
             if result.exec_code == RC.HPRINTF:
                 self.handle_hprintf()
@@ -454,9 +452,9 @@ class qemu:
                 break
 
             if result.page_fault:
-                logger.warn("%s Page fault encountered!" % self)
+                self.logger.warn("Page fault encountered!")
                 if result.page_fault_addr == old_address:
-                    logger.error("%s Failed to resolve page after second execution! Qemu status:\n%s" % (self, str(result._asdict())))
+                    self.logger.error("Failed to resolve page after second execution! Qemu status:\n%s", str(result._asdict()))
                     break
                 old_address = result.page_fault_addr
                 self.qemu_aux_buffer.dump_page(result.page_fault_addr)
@@ -480,7 +478,7 @@ class qemu:
     def audit(self, bitmap):
 
         if len(bitmap) != self.bitmap_size:
-            logger.info("bitmap size: %d" % len(bitmap))
+            self.logger.info("bitmap size: %d" % len(bitmap))
 
         new_bytes = 0
         new_bits = 0
@@ -493,8 +491,7 @@ class qemu:
                     new_bits += 1
         if new_bytes > 0:
             self.alt_edges += new_bytes;
-            logger.info("%s New bytes: %03d, bits: %03d, total edges seen: %03d" % (
-                self, new_bytes, new_bits, self.alt_edges))
+            self.logger.info("New bytes: %03d, bits: %03d, total edges seen: %03d", new_bytes, new_bits, self.alt_edges)
 
 
     def exit_reason(self, result):
@@ -541,5 +538,5 @@ class qemu:
             if self.exiting:
                 sys.exit(0)
             # Qemu crashed. Could be due to prior payload but more likely harness/config is broken..
-            logger.error("%s Failed to set new payload - Qemu crash?" % self)
+            self.logger.error("Failed to set new payload - Qemu crash?")
             raise

@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 import yaml
+import os
 import logging
+from logging import LoggerAdapter
 from pathlib import Path
 from logging.config import dictConfig
 from argparse import Namespace
@@ -14,6 +16,10 @@ import kafl_fuzzer
 
 LOGGING_CONFIG_FILE = Path(kafl_fuzzer.__file__).parent / "logging.yaml"
 DEBUG_FILENAME = 'kafl_fuzzer.log'
+
+class WorkerLogAdapter(LoggerAdapter):
+    def process(self, msg, kwargs):
+        return f'{os.getpid()}:Worker-{self.extra["pid"]:02d}:{msg}', kwargs
 
 def setup_logging(config: Namespace):
     # read config file
