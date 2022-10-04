@@ -13,7 +13,7 @@ from pprint import pformat
 import kafl_fuzzer
 
 LOGGING_CONFIG_FILE = Path(kafl_fuzzer.__file__).parent / "logging.yaml"
-DEBUG_FILENAME = 'debug.log'
+DEBUG_FILENAME = 'kafl_fuzzer.log'
 
 def setup_logging(config: Namespace):
     # read config file
