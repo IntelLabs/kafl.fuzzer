@@ -25,8 +25,6 @@ execution/finding rate.
 
 from math import log, log2, log10, ceil
 
-from kafl_fuzzer.common import logger
-
 # scale arbitrarily large / small inputs down to interval [1,scale]
 # supply alternative log to get a better fit
 def log_scale(value, base=2):

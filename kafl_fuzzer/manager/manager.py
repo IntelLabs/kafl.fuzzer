@@ -113,7 +113,6 @@ class ManagerTask:
 
     def check_abort_condition(self):
         import time
-        import datetime
 
         t_limit = self.config.abort_time
         n_limit = self.config.abort_exec

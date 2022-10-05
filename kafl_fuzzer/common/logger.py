@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 #import codecs
-import os
 import sys
 import time
 

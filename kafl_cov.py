@@ -27,10 +27,9 @@ from operator import itemgetter
 
 import msgpack
 import lz4.frame as lz4
-from tqdm import trange, tqdm
+from tqdm import tqdm
 from math import ceil
 
-import kafl_fuzzer.common.color as color
 from kafl_fuzzer.common.config import ConfigArgsParser
 from kafl_fuzzer.common.self_check import self_check, post_self_check
 from kafl_fuzzer.common.logger import init_logger, logger
@@ -38,7 +37,6 @@ from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu import qemu
 
-import json
 import csv
 
 null_hash = None

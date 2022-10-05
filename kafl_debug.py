@@ -9,9 +9,6 @@
 Execute a given kAFL target with individual test inputs for purpose of debug/inspection.
 """
 
-import os
-import sys
-
 from kafl_fuzzer.common.self_check import self_check, post_self_check
 from kafl_fuzzer.common.config import ConfigArgsParser
 from kafl_fuzzer.common.util import print_banner

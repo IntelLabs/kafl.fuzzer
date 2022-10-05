@@ -9,10 +9,7 @@ import time
 from sys import stdout
 from threading import Thread
 
-import mmh3
-
 import kafl_fuzzer.common.color as color
-from kafl_fuzzer.common.rand import rand
 from kafl_fuzzer.common.logger import init_logger, logger
 from kafl_fuzzer.common.self_check import post_self_check
 from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_sweep

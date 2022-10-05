@@ -12,7 +12,6 @@ Validate Redqueen Input-to-State mutations
 import array
 import sys
 
-from fuzzer.technique.redqueen import parser
 from fuzzer.technique.redqueen.mod import RedqueenInfoGatherer
 
 info = RedqueenInfoGatherer()

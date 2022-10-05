@@ -9,7 +9,6 @@ Redqueen Input Colorizer
 
 import array
 
-from kafl_fuzzer.common import rand
 
 
 # definition of range indicies:

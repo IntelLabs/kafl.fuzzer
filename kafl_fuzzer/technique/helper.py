@@ -7,13 +7,10 @@
 Helper functions used by fuzzing inference and mutation algorithms
 """
 
-import glob
-import inspect
-import os
 import struct
 
 import ctypes
-from ctypes import c_uint8, c_uint16, c_uint32
+from ctypes import c_uint8, c_uint32
 
 from kafl_fuzzer.common.rand import rand
 from kafl_fuzzer.native import loader as native_loader

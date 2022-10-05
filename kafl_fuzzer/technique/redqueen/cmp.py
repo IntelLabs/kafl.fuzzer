@@ -8,7 +8,6 @@ Redqueen Input Analysis
 """
 
 import itertools
-import re
 import struct
 
 from kafl_fuzzer.common.logger import logger

@@ -12,9 +12,6 @@ import re
 from collections import OrderedDict
 from six.moves import map
 
-from kafl_fuzzer.common import logger
-
-
 class GrimoireInference:
 
     def __init__(self, config, verify_input):

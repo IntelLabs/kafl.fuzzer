@@ -18,7 +18,6 @@ import time
 import shutil
 
 from kafl_fuzzer.common.logger import logger
-from kafl_fuzzer.common.util import read_binary_file, atomic_write, strdump, print_hprintf
 from kafl_fuzzer.technique.redqueen.workdir import RedqueenWorkdir
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu_aux_buffer import QemuAuxBuffer

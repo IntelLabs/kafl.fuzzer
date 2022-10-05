@@ -8,7 +8,6 @@ Main logic used by Worker to push nodes through various fuzzing stages/mutators.
 """
 
 import time
-from array import array
 
 from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.common.rand import rand

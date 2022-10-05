@@ -6,7 +6,6 @@ Test kAFL rand() wrapper / coin toss
 """
 
 import random
-import fastrand
 
 from kafl_fuzzer.technique.helper import rand
 
