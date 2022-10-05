@@ -23,6 +23,7 @@ import signal
 import multiprocessing as mp
 import subprocess
 import tempfile
+import logging
 from operator import itemgetter
 
 import msgpack
@@ -32,7 +33,7 @@ from math import ceil
 
 from kafl_fuzzer.common.config import ConfigArgsParser
 from kafl_fuzzer.common.self_check import self_check, post_self_check
-from kafl_fuzzer.common.logger import init_logger, logger
+from kafl_fuzzer.common.logger import setup_logging
 from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_sweep, print_banner
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu import qemu
@@ -40,6 +41,7 @@ from kafl_fuzzer.worker.qemu import qemu
 import csv
 
 null_hash = None
+logger = logging.getLogger(__name__)
 
 class TraceParser:
 
@@ -322,6 +324,8 @@ def generate_traces_worker(config, pid, work_queue):
         logger.error("Failed to prepare working directory. Exit.")
         return -1;
 
+    setup_logging(config)
+
     work_dir = config.work_dir
 
     signal.signal(signal.SIGTERM, sigterm_handler)
@@ -475,8 +479,6 @@ def main():
 
     parser = ConfigArgsParser()
     config = parser.parse_debug_options()
-
-    init_logger(config)
 
     if not post_self_check(config):
         return -1
