@@ -74,7 +74,6 @@ def check_nondet(min_, max_, array):
 class TestColorizer(unittest.TestCase):
 
     def check_fuzz_result(self, i, testcase):
-        color_info = [0] * len(testcase)
         c = ColorizerStrategy(len(testcase), lambda min_, max_: check(min_, max_, testcase))
         while len(c.unknown_ranges) > 0:
             # print c.unknown_ranges
@@ -84,10 +83,9 @@ class TestColorizer(unittest.TestCase):
         assert (all([x != 0 for x in c.color_info]))
 
     def check_nondet_fuzz_result(self, i, testcase):
-        color_info = [0] * len(testcase)
         c = ColorizerStrategy(len(testcase), lambda min_, max_: check_nondet(min_, max_, testcase))
         while len(c.unknown_ranges) > 0:
-            offset = c.colorize_step()
+            c.colorize_step()
         print("nondet:", c.color_info)
         if not all([x != 0 for x in c.color_info]):
             assert (False)

@@ -132,7 +132,6 @@ def test_coin_semantics():
     for _ in range(samples):
         if rand.int(2) == 0: # chance 1 out of 2
             check += 1
-    real = check/samples
 
     assert(abs(check/samples - 1/2) < 0.1), "Coin toss bias - semantics mismatch?"
 

@@ -49,7 +49,6 @@ class qemu:
         self.persistent_runs = 0
 
         work_dir = self.config.work_dir
-        project_name = work_dir.split("/")[-1]
 
         self.qemu_aux_buffer_filename = work_dir + "/aux_buffer_%d" % self.pid
 

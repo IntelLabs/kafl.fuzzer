@@ -252,7 +252,6 @@ redqueen_seen_addr_to_value = {}
 def set_dict(new_dict):
     global dict_import
     dict_import = new_dict
-    dict_set = set(new_dict)
 
 
 def clear_redqueen_dict():

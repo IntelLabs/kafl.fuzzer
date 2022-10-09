@@ -90,7 +90,6 @@ class Graph:
         plen = node.get("payload_len",1)
         perf = node.get("performance", node["info"]['performance'])
         favs = node.get("fav_bits", "")
-        level = node.get("level")
         exit = node["info"]["exit_reason"]
         parent = node["info"]["parent"]
         method = node["info"]["method"]

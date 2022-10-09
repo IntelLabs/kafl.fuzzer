@@ -182,7 +182,6 @@ def ptime(secs):
 
 def atime(secs):
     secs = int(secs)
-    seconds = secs % 60
     secs //= 60
     mins = secs % 60
     secs //= 60
@@ -818,7 +817,7 @@ if __name__ == "__main__":
 
     try:
         curses.wrapper(main)
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         # ignore - typically just a fuzzer restart or wrong argv[1]
         print("Error reading from workdir. Exit.")
     except KeyboardInterrupt:

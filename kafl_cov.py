@@ -106,7 +106,6 @@ class TraceParser:
     def gen_reports(self):
         unique_bbs = set()
         unique_edges = dict()
-        input_to_new_bbs = list()
 
         plot_file = self.trace_dir + "/coverage.csv"
         edges_file = self.trace_dir + "/edges_uniq.lst"
@@ -324,7 +323,6 @@ def generate_traces_worker(config, pid, work_queue):
         return -1;
 
     work_dir = config.work_dir
-    trace_dir = config.input + "/traces/"
 
     signal.signal(signal.SIGTERM, sigterm_handler)
     os.setpgrp()
@@ -432,7 +430,6 @@ def simple_trace_run(q, payload, send_func):
 
 def funky_trace_run(q, input_path, retry=1):
     validations = 12
-    confirmations = 0
 
     payload = read_binary_file(input_path)
 
