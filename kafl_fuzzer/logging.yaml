@@ -8,7 +8,7 @@ formatters:
     format: '{message}'
     style: '{'
   default:
-    format: '{levelname}:{name}:{message}'
+    format: '{asctime}:{levelname}:{name}:{message}'
     style: '{'
 handlers:
   console:
