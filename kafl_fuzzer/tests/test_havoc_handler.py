@@ -17,6 +17,8 @@ EMPTY_ARRAY = []
 
 ITERATIONS=2*1024
 
+helper_init()
+
 def test_redqueen_dict_clear():
     clear_redqueen_dict()
     assert(EMPTY_DICT == get_redqueen_dict()), "Failed to clear RQ dict!"
@@ -126,8 +128,6 @@ def test_havoc_insert_line(v=False):
 
 
 def havoc_main():
-
-    return
 
     test_redqueen_dict_clear()
     test_redqueen_dict_add()
