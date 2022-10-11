@@ -8,7 +8,6 @@ Fuzz inputs are managed as nodes in a queue. Any persistent metadata is stored h
 """
 
 import lz4.frame
-import mmh3
 import msgpack
 
 from kafl_fuzzer.common.util import read_binary_file, atomic_write

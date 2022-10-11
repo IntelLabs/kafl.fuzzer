@@ -11,15 +11,10 @@ Optionally also visualize this output using an xdot graph.
 
 """
 
-import os
 import sys
 import time
 import glob
-import string
-import binascii
 import msgpack
-from datetime import timedelta
-from pprint import pprint
 
 import pygraphviz as pgv
 
@@ -95,7 +90,6 @@ class Graph:
         plen = node.get("payload_len",1)
         perf = node.get("performance", node["info"]['performance'])
         favs = node.get("fav_bits", "")
-        level = node.get("level")
         exit = node["info"]["exit_reason"]
         parent = node["info"]["parent"]
         method = node["info"]["method"]

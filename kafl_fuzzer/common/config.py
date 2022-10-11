@@ -6,12 +6,10 @@
 import argparse
 import os
 import re
-import sys
 
 import confuse
 from flatdict import FlatDict
 
-from kafl_fuzzer.common.util import is_float, is_int, Singleton
 from kafl_fuzzer.common.logger import logger
 
 

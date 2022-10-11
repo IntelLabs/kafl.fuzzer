@@ -136,7 +136,6 @@ class HashFixer:
     def try_fix_cmp(self, shape, fixed_data, run_info, cmp):
         known_offsets = self.redqueen_state.get_candidate_file_offsets(cmp.addr)
         logger.debug("known offsets for: %x = %s" % (cmp.addr, known_offsets))
-        mutations = [x for x in cmp.calc_mutations(run_info, 1)]
         for (offsets, lhs, rhs, enc) in cmp.calc_mutations(run_info, 1):
             if offsets in known_offsets:
                 if self.try_fix_cmp_with(shape, fixed_data, cmp, offsets, lhs, rhs, enc):

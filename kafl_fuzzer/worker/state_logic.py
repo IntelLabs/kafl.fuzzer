@@ -8,7 +8,6 @@ Main logic used by Worker to push nodes through various fuzzing stages/mutators.
 """
 
 import time
-from array import array
 
 from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.common.rand import rand
@@ -266,11 +265,6 @@ class FuzzingStateLogic:
         self.redqueen_time += time.time() - redqueen_start_time
 
     def handle_havoc(self, payload, metadata):
-        grimoire_time = 0
-        havoc_time = 0
-        splice_time = 0
-        radamsa_time = 0
-
         havoc_afl = True
         havoc_splice = True
         havoc_radamsa = self.config.radamsa
@@ -278,8 +272,6 @@ class FuzzingStateLogic:
         havoc_redqueen = self.config.redqueen
 
         for i in range(1):
-            initial_findings = self.stage_info_findings
-
             # Dict based on RQ learned tokens
             # TODO: AFL only has deterministic dict stage for manual dictionary.
             # However RQ dict and auto-dict actually grow over time. Perhaps

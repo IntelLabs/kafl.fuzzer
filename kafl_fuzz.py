@@ -9,9 +9,6 @@
 Launcher for Fuzzing with kAFL. Check fuzzer/core.py for more.
 """
 
-import os
-import sys
-
 from kafl_fuzzer.common.self_check import self_check
 from kafl_fuzzer.common.config import ConfigArgsParser
 from kafl_fuzzer.common.util import print_banner

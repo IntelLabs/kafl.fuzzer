@@ -61,7 +61,7 @@ def perform_radamsa_round(data, func, num_inputs):
                     os.remove(input_dir+path)
                 p.communicate(timeout=1)
                 break
-            except subprocess.SubprocessError as e:
+            except subprocess.SubprocessError:
                 pass
     except SystemExit:
         # be sure to cleanup on kill signal

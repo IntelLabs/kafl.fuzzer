@@ -8,7 +8,6 @@ Redqueen Input Analysis
 """
 
 import itertools
-import re
 import struct
 
 from kafl_fuzzer.common.logger import logger
@@ -52,7 +51,6 @@ class Cmp:
         self.hammer = (not self.addr in known_lea_offsets) and (self.type in ["LEA", "SUB", "ADD"])
         known_lea_offsets.add(self.addr)
         self.offsets_and_lhs_to_rhs = {}
-        index = None
 
     def add_result(self, run_info, lhs, rhs):
         self.run_info_to_pairs[run_info] = self.run_info_to_pairs.get(run_info, set())

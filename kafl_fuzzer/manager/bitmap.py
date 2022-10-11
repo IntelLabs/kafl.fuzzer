@@ -7,9 +7,7 @@
 kAFL Fuzzer Bitmap
 """
 
-import array
 import ctypes
-import inspect
 import mmap
 import os
 

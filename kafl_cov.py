@@ -27,10 +27,9 @@ from operator import itemgetter
 
 import msgpack
 import lz4.frame as lz4
-from tqdm import trange, tqdm
+from tqdm import tqdm
 from math import ceil
 
-import kafl_fuzzer.common.color as color
 from kafl_fuzzer.common.config import ConfigArgsParser
 from kafl_fuzzer.common.self_check import self_check, post_self_check
 from kafl_fuzzer.common.logger import init_logger, logger
@@ -38,7 +37,6 @@ from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu import qemu
 
-import json
 import csv
 
 null_hash = None
@@ -108,7 +106,6 @@ class TraceParser:
     def gen_reports(self):
         unique_bbs = set()
         unique_edges = dict()
-        input_to_new_bbs = list()
 
         plot_file = self.trace_dir + "/coverage.csv"
         edges_file = self.trace_dir + "/edges_uniq.lst"
@@ -326,7 +323,6 @@ def generate_traces_worker(config, pid, work_queue):
         return -1;
 
     work_dir = config.work_dir
-    trace_dir = config.input + "/traces/"
 
     signal.signal(signal.SIGTERM, sigterm_handler)
     os.setpgrp()
@@ -434,7 +430,6 @@ def simple_trace_run(q, payload, send_func):
 
 def funky_trace_run(q, input_path, retry=1):
     validations = 12
-    confirmations = 0
 
     payload = read_binary_file(input_path)
 

@@ -7,8 +7,6 @@
 Reimplementation of AFL-style arithmentic mutations (deterministic stage).
 """
 
-from binascii import hexlify
-
 from kafl_fuzzer.technique.helper import *
 
 

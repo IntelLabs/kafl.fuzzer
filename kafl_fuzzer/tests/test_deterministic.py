@@ -5,8 +5,6 @@
 Test kAFL deterministic mutations
 """
 
-import os
-import struct
 import random
 from binascii import hexlify
 
@@ -14,7 +12,7 @@ from kafl_fuzzer.technique.interesting_values import *
 from kafl_fuzzer.technique.arithmetic import *
 from kafl_fuzzer.technique.bitflip import *
 from kafl_fuzzer.technique.helper import *
-from kafl_fuzzer.tests.helper import ham_distance, ham_weight, bindiff
+from kafl_fuzzer.tests.helper import ham_distance
 
 def generate_effector_map(length):
     eff_map = []
@@ -110,7 +108,6 @@ def assert_bitflip_invariants(func, flipped_bits, loops, skips, payloads):
 def test_invariants(v=False):
 
     old=False
-    verbose=False
 
     payloads = []
     for length in [range(0, 3), 16, 23, 33]:
@@ -158,7 +155,6 @@ def test_invariants(v=False):
 def assert_func_num_calls(func, payload, expected_calls, v=False):
 
     global calls
-    skip_zero = False
     calls = 0
 
     def verifier(outdata, label=None):
@@ -352,8 +348,6 @@ def test_int_32_call_num():
 import timeit
 def deter_benchmark():
 
-    verbose=False
-    old=False
     payloads = [b'abcdefghijklmnopqrstuvwxyz01234567890', bytes([254,255,255,254,255,254,252])]
 
     def bench_arith_8():
@@ -415,9 +409,7 @@ def deter_main():
     deter_benchmark()
     return
 
-    verbose=True
-
-    payloads = [b'\x00', b'abcdefghijk', bytes([0,1,2,3,4,5,6,7,8,9]), bytes([254,255,255,254,255,254,252])]
+    # payloads = [b'\x00', b'abcdefghijk', bytes([0,1,2,3,4,5,6,7,8,9]), bytes([254,255,255,254,255,254,252])]
     #payloads = [b'abcdefghijk']
     #payloads = [b'\x00\x00']
 

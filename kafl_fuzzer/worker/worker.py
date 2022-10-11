@@ -22,7 +22,6 @@ import lz4.frame as lz4
 #from kafl_fuzzer.common.config import FuzzerConfiguration
 from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.common.rand import rand
-from kafl_fuzzer.common.util import read_binary_file, atomic_write
 from kafl_fuzzer.manager.bitmap import BitmapStorage, GlobalBitmap
 from kafl_fuzzer.manager.communicator import ClientConnection, MSG_IMPORT, MSG_RUN_NODE, MSG_BUSY
 from kafl_fuzzer.manager.node import QueueNode

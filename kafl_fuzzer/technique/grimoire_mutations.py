@@ -7,7 +7,6 @@
 Grimoire grammar-based mutations (havoc stage)
 """
 
-from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.common.rand import rand
 
 CHOOSE_SUBINPUT = 50

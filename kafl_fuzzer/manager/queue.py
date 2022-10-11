@@ -94,7 +94,7 @@ class InputQueue:
         if results.get("performance"):
             oldperf = node.get_initial_performance()
             newperf = results["performance"]
-            #print("perf updated for node %d: %.2f => %.2f" % (node.get_id(), oldperf*1000,newperf*1000))
+            logger.debug("perf updated for node %d: %.2f => %.2f" % (node.get_id(), oldperf*1000,newperf*1000))
             node.set_score(self.scheduler.score_speed(node))
 
         node.set_fav_factor(self.scheduler.score_impact(node), write=False)

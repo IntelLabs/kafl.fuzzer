@@ -5,13 +5,12 @@
 Test kAFL havoc mutations
 """
 
-import unittest, os
 import struct
 from binascii import hexlify
 
 from kafl_fuzzer.technique.havoc_handler import *
 from kafl_fuzzer.technique.helper import *
-from kafl_fuzzer.tests.helper import ham_distance, ham_weight
+from kafl_fuzzer.tests.helper import ham_distance
 
 EMPTY_DICT = {}
 EMPTY_ARRAY = []

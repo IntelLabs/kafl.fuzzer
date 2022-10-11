@@ -8,11 +8,9 @@ import shutil
 import time
 from sys import stdout
 from threading import Thread
-
-import mmh3
+from pprint import pformat
 
 import kafl_fuzzer.common.color as color
-from kafl_fuzzer.common.rand import rand
 from kafl_fuzzer.common.logger import init_logger, logger
 from kafl_fuzzer.common.self_check import post_self_check
 from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_sweep
@@ -20,7 +18,6 @@ from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu import qemu
 from kafl_fuzzer.technique.redqueen import parser
 from kafl_fuzzer.technique.redqueen.hash_fix import HashFixer
-from kafl_fuzzer.technique.redqueen.workdir import RedqueenWorkdir
 
 REFRESH = 0.25
 
@@ -97,7 +94,7 @@ def gdb_session(config, qemu_verbose=True, notifiers=True):
             q.set_payload(read_binary_file(payload_file))
             result = q.debug_payload()
             logger.info("Thank you for playing.")
-            #pprint(result._asdict())
+            logger.debug(pformat(result._asdict()))
     finally:
         logger.info("Shutting down..")
         q.async_exit()
@@ -382,7 +379,6 @@ def verify_dbg(config, qemu_verbose=False):
     logger.info("Starting...")
 
     rq_state = RedqueenState()
-    workdir = RedqueenWorkdir(1337)
 
     if os.path.exists("patches"):
         with open("patches", "r") as f:
@@ -442,13 +438,10 @@ def verify_dbg(config, qemu_verbose=False):
     else:
         logger.error("couldn't fix payload\n")
 
-    start = time.time()
     return 0
 
 
 def start(config):
-
-    work_dir = config.work_dir
 
     init_logger(config)
 

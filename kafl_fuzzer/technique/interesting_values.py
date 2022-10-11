@@ -7,8 +7,6 @@
 AFL-style 'interesting values' mutations (deterministic stage).
 """
 
-from binascii import hexlify
-
 from kafl_fuzzer.technique.helper import *
 
 

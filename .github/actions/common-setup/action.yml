@@ -1,0 +1,16 @@
+name: 'Project setup'
+description: 'This actions will setup Python, the cache and install the dependencies'
+author: 'Mathieu Tarral'
+runs:
+    using: 'composite'
+    steps:
+      - name: Set up Python 🐍
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+          cache: 'pip'
+          cache-dependency-path: dev-requirements.txt
+
+      - name: Install dev requirements
+        run: python -m pip install -r dev-requirements.txt
+        shell: bash
