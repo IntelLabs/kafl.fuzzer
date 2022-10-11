@@ -16,6 +16,8 @@ from kafl_fuzzer.technique.bitflip import *
 from kafl_fuzzer.technique.helper import *
 from kafl_fuzzer.tests.helper import ham_distance, ham_weight, bindiff
 
+helper_init()
+
 def generate_effector_map(length):
     eff_map = []
     for i in range(length):
