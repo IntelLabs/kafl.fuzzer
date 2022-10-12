@@ -16,20 +16,9 @@ from kafl_fuzzer.common.logger import logger
 
 
 
-
-class FullPath(argparse.Action):
+class ExpandVars(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, os.path.abspath(os.path.expanduser(values)))
-
-
-def create_dir(dirname):
-    if not os.path.isdir(dirname):
-        try:
-            os.makedirs(dirname)
-        except:
-            msg = "Cannot create directory: {0}".format(dirname)
-            raise argparse.ArgumentTypeError(msg)
-    return dirname
+        setattr(namespace, self.dest, os.path.expandvars(values))
 
 
 def parse_is_dir(dirname):
@@ -85,7 +74,7 @@ def hidden(msg, unmask=False):
 def add_args_general(parser):
     parser.add_argument('-h', '--help', action='help',
                         help='show this help message and exit')
-    parser.add_argument('-w', '--work-dir', metavar='<dir>', action=FullPath, type=str,
+    parser.add_argument('-w', '--work-dir', metavar='<dir>', action=ExpandVars, type=str,
                         required=True, help='path to the output/working directory.')
     parser.add_argument('--purge', required=False, help='purge the working directory at startup.',
                         action='store_true', default=False)
@@ -104,9 +93,9 @@ def add_args_general(parser):
 
 # kAFL/Fuzzer-specific options
 def add_args_fuzzer(parser):
-    parser.add_argument('--seed-dir', required=False, metavar='<dir>', action=FullPath,
+    parser.add_argument('--seed-dir', required=False, metavar='<dir>', action=ExpandVars,
                         type=parse_is_dir, help='path to the seed directory.')
-    parser.add_argument('--dict', required=False, metavar='<file>', type=parse_is_file, action=FullPath,
+    parser.add_argument('--dict', required=False, metavar='<file>', type=parse_is_file, action=ExpandVars,
                         help='import dictionary file for use in havoc stage.', default=None)
     parser.add_argument('--funky', required=False, help='perform extra validation and store funky inputs.',
                         action='store_true', default=False)
@@ -147,7 +136,7 @@ def add_args_fuzzer(parser):
     parser.add_argument('--kickstart', metavar='<n>', help="kickstart fuzzing with <n> byte random strings (default 256, 0 to disable)",
                         type=int, required=False, default=256)
     parser.add_argument('--radamsa-path', metavar='<file>', help=hidden('path to radamsa executable'),
-                        type=parse_is_file, action=FullPath, required=False, default=None)
+                        type=parse_is_file, action=ExpandVars, required=False, default=None)
 
 
 # Qemu/Worker-specific launch options
@@ -156,28 +145,28 @@ def add_args_qemu(parser):
     config_default_base   = '-enable-kvm -machine kAFL64-v1 -cpu kAFL64-Hypervisor-v1,+vmx -no-reboot -net none -display none'
 
     # BIOS/Image/Kernel load modes are partly exclusive, but we need at least one of them
-    parser.add_argument('--image', dest='qemu_image', metavar='<qcow2>', required=False, action=FullPath, 
+    parser.add_argument('--image', dest='qemu_image', metavar='<qcow2>', required=False, action=ExpandVars, 
                         type=parse_is_file, help='path to Qemu disk image.')
-    parser.add_argument('--snapshot', dest='qemu_snapshot', metavar='<dir>', required=False, action=FullPath,
+    parser.add_argument('--snapshot', dest='qemu_snapshot', metavar='<dir>', required=False, action=ExpandVars,
                         type=parse_is_dir, help='path to VM pre-snapshot directory.')
-    parser.add_argument('--bios', dest='qemu_bios', metavar='<file>', required=False, action=FullPath, type=parse_is_file,
+    parser.add_argument('--bios', dest='qemu_bios', metavar='<file>', required=False, action=ExpandVars, type=parse_is_file,
                         help='path to the BIOS image.')
-    parser.add_argument('--kernel', dest='qemu_kernel', metavar='<file>', required=False, action=FullPath,
+    parser.add_argument('--kernel', dest='qemu_kernel', metavar='<file>', required=False, action=ExpandVars,
                         type=parse_is_file, help='path to the Kernel image.')
-    parser.add_argument('--initrd', dest='qemu_initrd', metavar='<file>', required=False, action=FullPath, type=parse_is_file,
+    parser.add_argument('--initrd', dest='qemu_initrd', metavar='<file>', required=False, action=ExpandVars, type=parse_is_file,
                         help='path to the initrd/initramfs file.')
     parser.add_argument('--append', dest='qemu_append', metavar='<str>', help='Qemu -append option',
                         type=str, required=False, default=None)
     parser.add_argument('-m', '--memory', dest='qemu_memory', metavar='<n>', help='size of VM RAM in MB (default: 256).',
                         default=256, type=int)
 
-    parser.add_argument('--qemu-base', metavar='<str>', help='base Qemu config (check defaults!)',
+    parser.add_argument('--qemu-base', metavar='<str>', action=ExpandVars, help='base Qemu config (check defaults!)',
                         type=str, required=False, default=config_default_base)
     parser.add_argument('--qemu-serial', metavar='<str>', help='Qemu serial emulation (redirected to file, see defaults)',
                         type=str, required=False, default=None)
-    parser.add_argument('--qemu-extra', metavar='<str>', help='extra Qemu config (check defaults!)',
+    parser.add_argument('--qemu-extra', metavar='<str>', action=ExpandVars, help='extra Qemu config (check defaults!)',
                         type=str, required=False, default=None)
-    parser.add_argument('--qemu-path', metavar='<file>', help=hidden('path to Qemu-Nyx executable'),
+    parser.add_argument('--qemu-path', metavar='<file>', action=ExpandVars, help=hidden('path to Qemu-Nyx executable'),
                         type=parse_is_file, required=True, default=None)
 
     parser.add_argument('-ip0', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
@@ -189,7 +178,7 @@ def add_args_qemu(parser):
     parser.add_argument('-ip3', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
                         help=hidden('Set IP trace filter range 3 (should be page-aligned)'))
 
-    parser.add_argument('--sharedir', metavar='<dir>', required=False, action=FullPath,
+    parser.add_argument('--sharedir', metavar='<dir>', required=False, action=ExpandVars,
                         type=parse_is_dir, help='path to the page buffer share directory.')
     parser.add_argument('-R', '--reload', metavar='<n>', help='snapshot-reload every N execs (default: 1)',
                         type=int, required=False, default=1)
@@ -227,13 +216,13 @@ def add_args_debug(parser):
                        '<redqueen-qemu>\trun redqueen debugger and print QEMU stdout\n' \
                        '<verify>\t\trun verifcation steps\n'
     
-    parser.add_argument('--input', metavar='<file/dir>', action=FullPath, type=str,
+    parser.add_argument('--input', metavar='<file/dir>', action=ExpandVars, type=str,
                         help='path to input file or workdir.')
     parser.add_argument('-n', '--iterations', metavar='<n>', help='execute <n> times (for some actions)',
                         default=5, type=int)
     parser.add_argument('--action', required=False, metavar='<cmd>', choices=debug_modes,
                         help=debug_modes_help)
-    parser.add_argument('--ptdump-path', metavar='<file>', help=hidden('path to ptdump executable'),
+    parser.add_argument('--ptdump-path', metavar='<file>', action=ExpandVars, help=hidden('path to ptdump executable'),
                         type=parse_is_file, required=True, default=None)
 
 
@@ -268,7 +257,7 @@ class ConfigArgsParser():
         for action in parser._actions:
             #print("action: %s" % repr(action))
             if action.dest in config_values:
-                if action.type == parse_is_file:
+                if isinstance(action, ExpandVars):
                     action.default = config[action.dest].as_str_expanded()
                 elif isinstance(action, argparse._AppendAction):
                     assert("append are not supported in in yaml config")
