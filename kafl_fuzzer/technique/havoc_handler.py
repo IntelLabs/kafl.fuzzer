@@ -7,9 +7,12 @@
 AFL-style havoc mutations (havoc stage)
 """
 
+import logging
 from kafl_fuzzer.common.rand import rand
 from kafl_fuzzer.common.util import read_binary_file, find_diffs
 from kafl_fuzzer.technique.helper import *
+
+logger = logging.getLogger(__name__)
 
 def insert_word(data, chars, term):
     if len(data) < 2:

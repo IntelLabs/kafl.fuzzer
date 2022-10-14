@@ -16,11 +16,10 @@ import signal
 import sys
 import shutil
 import tempfile
-
+import logging
 import lz4.frame as lz4
 
 #from kafl_fuzzer.common.config import FuzzerConfiguration
-from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.common.rand import rand
 from kafl_fuzzer.manager.bitmap import BitmapStorage, GlobalBitmap
 from kafl_fuzzer.manager.communicator import ClientConnection, MSG_IMPORT, MSG_RUN_NODE, MSG_BUSY
@@ -29,9 +28,9 @@ from kafl_fuzzer.manager.statistics import WorkerStatistics
 from kafl_fuzzer.worker.state_logic import FuzzingStateLogic
 from kafl_fuzzer.worker.qemu import QemuIOException
 from kafl_fuzzer.worker.qemu import qemu as Qemu
+from kafl_fuzzer.common.logger import WorkerLogAdapter
 
 def worker_loader(pid, config):
-    logger.debug("Worker-%02d PID: %d" % (pid, os.getpid()))
     worker = WorkerTask(pid, config)
     worker.start()
 
@@ -40,6 +39,8 @@ class WorkerTask:
     def __init__(self, pid, config):
         self.config = config
         self.pid = pid
+        self.logger_no_prefix = logging.getLogger(__name__)
+        self.logger = WorkerLogAdapter(self.logger_no_prefix, {'pid': self.pid})
 
         self.q = Qemu(self.pid, self.config)
         self.conn = ClientConnection(pid, config)
@@ -53,9 +54,6 @@ class WorkerTask:
         self.t_check = config.timeout_check
         self.num_funky = 0
 
-    def __str__(self):
-        return "Worker-%02d" % self.pid
-
     def handle_import(self, msg):
         meta_data = {"state": {"name": "import"}, "id": 0}
         payload = msg["task"]["payload"]
@@ -63,7 +61,7 @@ class WorkerTask:
         try:
             self.logic.process_import(payload, meta_data)
         except QemuIOException:
-            logger.warn("%s: Execution failure on import.", self)
+            self.logger.warn("%s: Execution failure on import.", self)
             self.conn.send_node_abort(None, None)
             raise
         self.conn.send_ready()
@@ -73,11 +71,11 @@ class WorkerTask:
         kickstart = self.config.kickstart
 
         if kickstart:
-            logger.debug("%s No inputs in queue, attempting kickstart(%d).." % (self, kickstart))
+            self.logger.debug("No inputs in queue, attempting kickstart(%d)..", kickstart)
             self.q.set_timeout(self.t_hard)
             self.logic.process_kickstart(kickstart)
         else:
-            logger.info("%s No inputs in queue, sleeping %ds.." % (self, busy_timeout))
+            self.logger.info("No inputs in queue, sleeping %ds..", busy_timeout)
             time.sleep(busy_timeout)
         self.conn.send_ready()
 
@@ -93,7 +91,7 @@ class WorkerTask:
             results, new_payload = self.logic.process_node(payload, meta_data)
         except QemuIOException:
             # mark node as crashing and free it before escalating
-            logger.info("Qemu execution failed for node %d." % meta_data["id"])
+            self.logger.info("Qemu execution failed for node %d." % meta_data["id"])
             results = self.logic.create_update(meta_data["state"], {"crashing": True})
             self.conn.send_node_abort(meta_data["id"], results)
             raise
@@ -101,11 +99,9 @@ class WorkerTask:
         if new_payload:
             default_info = {"method": "validate_bits", "parent": meta_data["id"]}
             if self.validate_bits(new_payload, meta_data, default_info):
-                logger.debug("%s Stage %s found alternative payload for node %d"
-                          % (self, meta_data["state"]["name"], meta_data["id"]))
+                self.logger.debug("Stage %s found alternative payload for node %d", meta_data["state"]["name"], meta_data["id"])
             else:
-                logger.warn("%s Provided alternative payload found invalid - bug in stage %s?"
-                          % (self, meta_data["state"]["name"]))
+                self.logger.warn("Provided alternative payload found invalid - bug in stage %s?", meta_data["state"]["name"])
         self.conn.send_node_done(meta_data["id"], results, new_payload)
 
     def start(self):
@@ -125,8 +121,7 @@ class WorkerTask:
             cpu = sorted(os.sched_getaffinity(0))[cpu_offset]
             os.sched_setaffinity(0, [cpu])
         except Exception:
-            logger.error("%s failed to set CPU affinity to %d out of %d. Aborting.."
-                    % (self, cpu_offset, len(os.sched_getaffinity(0))))
+            self.logger.error("failed to set CPU affinity to %d out of %d. Aborting..", cpu_offset, len(os.sched_getaffinity(0)))
             return
 
         # start Qemu and commence main worker loop
@@ -134,24 +129,24 @@ class WorkerTask:
             if self.q.start():
                 self.loop()
             else:
-                logger.error("%s Failed to launch Qemu." % self)
+                self.logger.error("Failed to launch Qemu.")
         except QemuIOException:
             # Qemu has likely died on us - try to restart?
             pass
         finally:
             if self.q:
                 self.q.async_exit()
-            logger.info("%s Exit." % self)
+            self.logger.info("Exit.")
 
     def loop(self):
-        logger.info("%s entering fuzz loop.." % self)
+        self.logger.info("Entering fuzz loop..")
         self.conn.send_ready()
 
         while True:
             try:
                 msg = self.conn.recv()
             except ConnectionResetError:
-                logger.error("%s Lost connection to Manager. Shutting down." % self)
+                self.logger.error("Lost connection to Manager. Shutting down.")
                 return
 
             if msg["type"] == MSG_RUN_NODE:
@@ -207,7 +202,7 @@ class WorkerTask:
             if confirmations >= 0.75*validations:
                 return True, runtime_avg/num
 
-        logger.debug("%s Funky input received %d/%d confirmations. Rejecting.." % (self, confirmations, validations))
+        self.logger.debug("Funky input received %d/%d confirmations. Rejecting..", confirmations, validations)
         if self.config.debug:
             self.store_funky(data)
         return False, runtime_avg/num
@@ -265,7 +260,7 @@ class WorkerTask:
         trace_edge_out = self.config.work_dir + "/traces/fuzz_cb_%05d.lst" % info['id']
         trace_dump_out = self.config.work_dir + "/traces/fuzz_cb_%05d.bin" % info['id']
 
-        logger.info("%s Tracing payload_%05d.." % (self, info['id']))
+        self.logger.info("Tracing payload_%05d..", info['id'])
 
         if len(data) > self.payload_limit:
             data = data[:self.payload_limit]
@@ -296,7 +291,7 @@ class WorkerTask:
                 self.statistics.event_reload(exec_res.exit_reason)
                 self.q.reload()
         except Exception as e:
-            logger.info("%s Failed to produce trace %s: %s (skipping..)" % (self, trace_edge_out, e))
+            self.logger.info("Failed to produce trace %s: %s (skipping..)", trace_edge_out, e)
             return None
 
         return exec_res
@@ -332,10 +327,10 @@ class WorkerTask:
         except (ValueError, BrokenPipeError, ConnectionResetError) as e:
             if retry > 2:
                 # TODO if it reliably kills qemu, perhaps log to Manager for harvesting..
-                logger.error("%s Aborting due to repeated SHM/socket error." % self)
+                self.logger.error("Aborting due to repeated SHM/socket error.")
                 raise QemuIOException("Qemu SHM/socket failure.") from e
 
-            logger.warn("%s Qemu SHM/socket error (retry %d)" % (self, retry))
+            self.logger.warn("Qemu SHM/socket error (retry %d)", retry)
             self.statistics.event_reload("shm/socket error")
             if not self.q.restart():
                 raise QemuIOException("Qemu restart failure.") from e
@@ -379,7 +374,7 @@ class WorkerTask:
                             info['pt_dump'] = f.name
                 if not stable:
                     # TODO: auto-throttle persistent runs based on funky rate?
-                    logger.debug("%s Input validation failed! Target funky?.." % self)
+                    self.logger.debug("Input validation failed! Target funky?..")
                     self.statistics.event_funky()
             if exec_res.exit_reason == "timeout" and not hard_timeout:
                 # re-run payload with max timeout
@@ -393,7 +388,7 @@ class WorkerTask:
                     exec_res, is_new = self.execute(data, info, hard_timeout=True)
                     self.q.set_timeout(dyn_timeout)
                     if is_new and exec_res.exit_reason != "timeout":
-                        logger.debug("Timeout checker found non-timeout with runtime %f >= %f!" % (exec_res.performance, dyn_timeout))
+                        self.logger.debug("Timeout checker found non-timeout with runtime %f >= %f!" % (exec_res.performance, dyn_timeout))
                     else:
                         # uselessly spend time validating a soft-timeout
                         # log it so user may adjust soft-timeout handling

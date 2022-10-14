@@ -9,8 +9,8 @@ Redqueen Input Analysis
 
 import itertools
 import struct
+import logging
 
-from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.technique import havoc_handler
 from .encoding import Encoders
 
@@ -20,6 +20,7 @@ HAMMER_LEA = None
 SKIP_SIMPLE = None
 AFL_ARITH_MAX = None
 known_lea_offsets = set()
+logger = logging.getLogger(__name__)
 
 def redqueen_global_config(redq_hammering, redq_do_simple, afl_arith_max):
     global HAMMER_LEA

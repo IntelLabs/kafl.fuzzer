@@ -1,0 +1,24 @@
+# The only valid value at present is 1
+# allows future evolution and preserve backward compatibility
+version: 1
+# any existing non-root loggers should be allowed
+disable_existing_loggers: false
+formatters:
+  brief:
+    format: '{message}'
+    style: '{'
+  default:
+    # levelname: always truncate to 4
+    # module: padd left and truncate to 7
+    format: '{asctime} {levelname:.4}:{module:<7.7}:{message}'
+    style: '{'
+    datefmt: '%H:%M:%S'
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: brief
+    level: NOTSET
+    stream: ext://sys.stderr
+root:
+  level: INFO
+  handlers: [console]

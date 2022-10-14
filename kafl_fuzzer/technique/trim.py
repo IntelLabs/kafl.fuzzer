@@ -7,7 +7,7 @@
 AFL-style trim algorithms (init stage)
 """
 
-from kafl_fuzzer.common.logger import logger
+import logging
 from kafl_fuzzer.common.rand import rand
 from kafl_fuzzer.manager.bitmap import GlobalBitmap
 
@@ -18,6 +18,7 @@ APPEND_VALUE = 0.1
 
 APPEND_BYTES = 16
 
+logger = logging.getLogger(__name__)
 pow2_values = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768]
 
 

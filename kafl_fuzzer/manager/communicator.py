@@ -9,10 +9,9 @@ Abstractions for kAFL Manager/Worker communicaton.
 
 import select
 
+import logging
 import msgpack
 from multiprocessing.connection import Listener, Client
-
-from kafl_fuzzer.common.logger import logger
 
 MSG_READY = 0
 MSG_IMPORT = 1
@@ -31,6 +30,7 @@ class ServerConnection:
         self.listener = Listener(self.address, 'AF_UNIX', backlog=1000)
         self.clients = [self.listener]
         self.clients_seen = 0
+        self.logger = logging.getLogger(__name__)
 
     def wait(self, timeout=None):
         results = []
@@ -48,7 +48,7 @@ class ServerConnection:
                 except (EOFError, IOError):
                     sock_ready.close()
                     self.clients.remove(sock_ready)
-                    logger.info("Worker disconnected (remaining %d/%d)." % (len(self.clients)-1, self.clients_seen))
+                    self.logger.info("Worker disconnected (remaining %d/%d)." % (len(self.clients)-1, self.clients_seen))
                     if len(self.clients) == 1:
                         raise SystemExit("All Workers exited.")
         return results

@@ -12,8 +12,8 @@ Launcher for Fuzzing with kAFL. Check fuzzer/core.py for more.
 from kafl_fuzzer.common.self_check import self_check
 from kafl_fuzzer.common.config import ConfigArgsParser
 from kafl_fuzzer.common.util import print_banner
-
 from kafl_fuzzer.manager import core as fuzzer
+
 
 def main():
 
@@ -24,7 +24,6 @@ def main():
 
     parser = ConfigArgsParser()
     config = parser.parse_fuzz_options()
-
     return fuzzer.start(config)
 
 

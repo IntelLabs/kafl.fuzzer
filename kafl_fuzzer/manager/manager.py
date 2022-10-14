@@ -12,12 +12,12 @@ Manage overall fuzz inputs/findings and schedule work for Worker instances.
 import glob
 import os
 
+import logging
 import mmh3
 import shutil
 import msgpack
 import lz4.frame as lz4
 
-from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.common.util import read_binary_file
 from kafl_fuzzer.manager.communicator import ServerConnection
 from kafl_fuzzer.manager.communicator import MSG_NODE_DONE, MSG_NEW_INPUT, MSG_READY, MSG_NODE_ABORT
@@ -29,6 +29,8 @@ from kafl_fuzzer.technique.redqueen.cmp import redqueen_global_config
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 
 from kafl_fuzzer.technique.helper import helper_init
+
+logger = logging.getLogger(__name__)
 
 class ManagerTask:
 

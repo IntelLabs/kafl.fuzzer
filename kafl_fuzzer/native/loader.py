@@ -12,10 +12,11 @@ import glob
 import inspect
 import os
 import subprocess
+import logging
 
-from kafl_fuzzer.common.logger import logger
 import kafl_fuzzer.native as native_pkg
 
+logger = logging.getLogger(__name__)
 
 def test_build():
     native_path = os.path.dirname(inspect.getfile(native_pkg))

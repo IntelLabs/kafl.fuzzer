@@ -12,11 +12,12 @@ import math
 import os
 import random
 import subprocess
+import logging
 
-from kafl_fuzzer.common.logger import logger
 from kafl_fuzzer.common.util import read_binary_file
 from kafl_fuzzer.technique.helper import KAFL_MAX_FILE
 
+logger = logging.getLogger(__name__)
 
 def init_radamsa(config, pid):
     global corpus_dir
