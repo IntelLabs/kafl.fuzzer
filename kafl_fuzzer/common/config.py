@@ -255,7 +255,7 @@ class ConfigArgsParser():
         for action in parser._actions:
             #print("action: %s" % repr(action))
             if action.dest in config_values:
-                if isinstance(action, ExpandVars):
+                if isinstance(action, ExpandVars) and config[action.dest].get():
                     action.default = config[action.dest].as_str_expanded()
                 elif isinstance(action, argparse._AppendAction):
                     assert("append are not supported in in yaml config")
