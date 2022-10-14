@@ -8,8 +8,11 @@ formatters:
     format: '{message}'
     style: '{'
   default:
-    format: '{asctime}:{levelname}:{name}:{message}'
+    # levelname: always truncate to 4
+    # module: padd left and truncate to 7
+    format: '{asctime} {levelname:.4}:{module:<7.7}:{message}'
     style: '{'
+    datefmt: '%H:%M:%S'
 handlers:
   console:
     class: logging.StreamHandler
