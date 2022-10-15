@@ -55,7 +55,7 @@ class TraceParser:
     @staticmethod
     def parse_trace_file(trace_file):
         if not os.path.isfile(trace_file):
-            logger.warn("Could not find trace file %s, skipping.." % trace_file)
+            logger.warning("Could not find trace file %s, skipping.." % trace_file)
             return None
 
         bbs = set()
@@ -247,7 +247,7 @@ def generate_traces(config, nproc, input_list):
 
     # TODO What is the effect of not defining a trace region? will it trace?
     if not config.ip0:
-        logger.warn("No trace region configured!")
+        logger.warning("No trace region configured!")
         return None
 
     os.makedirs(trace_dir, exist_ok=True)
@@ -382,16 +382,18 @@ def generate_traces_worker(config, pid, work_queue):
                                 cmd += [ range_a, range_b ]
 
                         try:
-                            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=180)
+                            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=60)
                             if result.returncode != 0:
-                                logger.warn("ptdump of %s failed with return code %d. Output:\n%s" % (
-                                    os.path.basename(input_path), result.returncode,
-                                    result.stdout))
+                                logger.warning("ptdump of %s failed with return code %d. Output:\n%s" % (
+                                    os.path.basename(input_path), result.returncode, result.stdout))
 
+                        except subprocess.TimeoutExpired:
+                            logger.info(f"Timeout while decoding {dump_file} - likely infinite loop!")
+                        finally:
                             os.unlink(pt_tmp.name)
-                        except subprocess.TimeoutExpired as e:
-                            logger.warn(e)
-                            os.unlink(pt_tmp.name)
+
+                        if os.path.getsize(tmpfile) == 0:
+                            logger.warning(f"Trace {dump_file} decoded to empty file, skipping..")
                             continue
 
                         with open(tmpfile, 'rb') as f_in:
@@ -423,7 +425,7 @@ def simple_trace_run(q, payload, send_func):
     q.set_trace_mode(False)
 
     if not exec_res:
-        logger.warn("Failed to execute. Continuing anyway...")
+        logger.warning("Failed to execute a payload. Continuing anyway...")
         assert(q.restart())
         return None
 
@@ -460,7 +462,7 @@ def funky_trace_run(q, input_path, retry=1):
         if hashes[h] >= 0.5*validations:
             return res
 
-    #logger.warn("Failed to get majority trace (retry=%d)\nHashes: %s" % (retry, str(hashes)))
+    #logger.warning("Failed to get majority trace (retry=%d)\nHashes: %s" % (retry, str(hashes)))
 
     if retry > 0:
         q.restart()
