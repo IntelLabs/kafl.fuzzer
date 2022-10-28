@@ -321,7 +321,7 @@ class ConfigParserBuilder():
         return args
 
     def _add_fuzz_subcommand(self, parser: _SubParsersAction):
-        fuzz_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.FUZZ.name.lower(), help="kAFL Duzzer")
+        fuzz_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.FUZZ.name.lower(), help="kAFL Fuzzer")
 
         fuzzer_grp = fuzz_subcommand.add_argument_group('Fuzzer options')
         add_args_fuzzer(fuzzer_grp)

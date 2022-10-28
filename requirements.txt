@@ -14,3 +14,5 @@ python-dateutil
 west
 confuse
 flatdict
+dynaconf
+appdirs
