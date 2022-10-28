@@ -212,7 +212,9 @@ class FuzzingStateLogic:
         self.worker.q.hprintf_log = True
         dump_dir = self.config.work_dir + "/dump/"
         self.worker.q.hprintf_logfile = dump_dir + "stackdump_%05d.log" % metadata['id']
-        assert(not os.path.exists(self.worker.q.hprintf_logfile))
+        if os.path.exists(self.worker.q.hprintf_logfile):
+            # this can happen if a previous Worker died performing the init stage of this payload
+            self.logger.warn(f"Overwriting existing stackdump at {self.worker.q.hprintf_logfile}")
         self.execute_naked(payload, timeout=10, label="stats")
         self.worker.q.hprintf_log = old_enable
         self.worker.q.hprintf_logfile = old_logfile
