@@ -90,4 +90,4 @@ class ClientConnection:
 
     def send_node_abort(self, node_id, results):
         self.sock.send_bytes(msgpack.packb(
-            {"type": MSG_NODE_ABORT, "node_id": node_id, "results": results}))
+            {"type": MSG_NODE_ABORT, "node_id": node_id, "results": results, "worker_id": self.pid}))

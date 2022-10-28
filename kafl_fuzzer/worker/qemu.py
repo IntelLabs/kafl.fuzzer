@@ -368,7 +368,7 @@ class qemu:
         msg = msg.decode('latin-1', errors='backslashreplace')
         msg = "Guest ABORT: %s" % msg
 
-        self.logger.error("Guest ABORT: %s", msg)
+        self.logger.error(msg)
         if self.hprintf_log:
             with open(self.hprintf_logfile, "a") as f:
                 f.write(msg)

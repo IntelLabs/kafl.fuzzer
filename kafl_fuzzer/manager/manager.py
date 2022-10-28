@@ -84,6 +84,9 @@ class ManagerTask:
                 logger.warn("Coverage bitmap is empty?! Check -ip0 or try better seeds.")
 
     def loop(self):
+        workers_ready = set()
+        workers_aborted = set()
+
         while True:
             for conn, msg in self.comm.wait(self.statistics.plot_thres):
                 if msg["type"] == MSG_NODE_DONE:
@@ -93,6 +96,8 @@ class ManagerTask:
                     self.send_next_task(conn)
                 elif msg["type"] == MSG_NODE_ABORT:
                     # Worker execution aborted, update queue item + DONT send new task
+                    logger.warn(f"Worker {msg['worker_id']} sent ABORT..")
+                    workers_aborted.add(msg["worker_id"])
                     if msg["node_id"]:
                         self.queue.update_node_results(msg["node_id"], msg["results"], None)
                 elif msg["type"] == MSG_NEW_INPUT:
@@ -104,12 +109,18 @@ class ManagerTask:
                     node_struct = {"info": msg["input"]["info"], "state": {"name": "initial"}}
                     self.maybe_insert_node(msg["input"]["payload"], msg["input"]["bitmap"], node_struct)
                 elif msg["type"] == MSG_READY:
-                    # Initial Worker hello, send first task...
-                    # logger.debug("Worker is ready..")
+                    # Worker is ready for new input (initial hello or import done)
+                    logger.debug(f"Worker {msg['worker_id']} sent READY..")
+                    workers_ready.add(msg["worker_id"])
                     self.send_next_task(conn)
                 else:
                     raise ValueError("unknown message type {}".format(msg))
-            self.statistics.maybe_write_stats()
+
+            # start printing status when first instance is ready - or exit when they died
+            if len(workers_ready) > 0:
+                if (len(workers_ready - workers_aborted)) == 0:
+                    raise SystemExit("All Workers have died, or aborted before they became ready. :-/")
+                self.statistics.maybe_write_stats()
             self.check_abort_condition()
 
 
