@@ -15,6 +15,7 @@ Prepare the kAFL workdir and copy any provided seeds to be picked up by the sche
 
 import multiprocessing
 import time
+import os
 import sys
 import logging
 from pprint import pformat
@@ -75,10 +76,17 @@ def start(config):
     if not config.ip0:
         logger.warn("No PT trace region defined.")
 
-    cpus = filter_available_cpus()
-    if num_worker > len(cpus):
-        logger.error(f"Requested {num_worker} but only {len(cpus)} free CPUs detected. Abort.")
-        return -1
+    avail, used = filter_available_cpus()
+    if num_worker > len(avail):
+        logger.error(f"Requested {num_worker} workers but only {len(avail)} vCPUs detected.")
+        return 1
+
+    # warn if we cannot limit ourselves to CPUs detected as free..
+    if num_worker + 1 >= len(avail-used):
+        logger.warn(f"Warning: Requested {num_worker} workers but {len(used)} out of {len(avail)} vCPUs seem busy?")
+        time.sleep(2)
+    else:
+        os.sched_setaffinity(0, avail-used)
 
     manager = ManagerTask(config)
 
