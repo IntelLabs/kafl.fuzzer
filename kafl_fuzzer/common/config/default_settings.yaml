@@ -18,13 +18,10 @@
 #
 
 # default tool paths
-qemu:
-  qemu_path: $QEMU_ROOT/x86_64-softmmu/qemu-system-x86_64
-  # default qemu configuration
-  qemu_base: -enable-kvm -machine kAFL64-v1 -cpu kAFL64-Hypervisor-v1,+vmx -no-reboot -net none -display none
-  qemu_append: nokaslr oops=panic nopti mitigations=off console=ttyS0
-  qemu_serial: -device isa-serial,chardev=kafl_serial
-debug:
-  ptdump_path: $LIBXDC_ROOT/build/ptdump_static
-fuzzer:
-  radamsa_path: $RADAMSA_ROOT/bin/radamsa
+qemu_path: $QEMU_ROOT/x86_64-softmmu/qemu-system-x86_64
+# default qemu configuration
+qemu_base: -enable-kvm -machine kAFL64-v1 -cpu kAFL64-Hypervisor-v1,+vmx -no-reboot -net none -display none
+qemu_append: nokaslr oops=panic nopti mitigations=off console=ttyS0
+qemu_serial: -device isa-serial,chardev=kafl_serial
+ptdump_path: $LIBXDC_ROOT/build/ptdump_static
+radamsa_path: $RADAMSA_ROOT/bin/radamsa

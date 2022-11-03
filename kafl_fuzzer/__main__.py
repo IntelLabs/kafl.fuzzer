@@ -3,16 +3,17 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-from kafl_fuzzer.common.config import ConfigParserBuilder, update_settings_from_cmdline
+from kafl_fuzzer.common.config import settings, update_from_namespace, ConfigParserBuilder
 
 def main():
     parser_builder = ConfigParserBuilder()
     parser = parser_builder()
-    breakpoint()
     # parse cmdline args
     args = parser.parse_args()
-    # update global config settings object
-    settings = update_settings_from_cmdline(args)
+    # override Dynaconf settings with command line settings
+    update_from_namespace(args)
+    # validate settings
+    settings.validators.validate()
     # call subcommand assigned default start func
     args.func(settings)
 

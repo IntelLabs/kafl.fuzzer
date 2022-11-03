@@ -6,12 +6,9 @@
 import argparse
 import os
 import re
-import sys
 import logging
-import confuse
 from enum import Enum, auto
 from argparse import _SubParsersAction, ArgumentParser
-from flatdict import FlatDict
 from typing import Any
 
 from kafl_fuzzer.manager.core import start as fuzz_start
@@ -89,130 +86,127 @@ def hidden(msg, unmask=False):
 def add_args_general(parser):
     parser.add_argument('-h', '--help', action='help',
                         help='show this help message and exit')
-    parser.add_argument('-w', '--work-dir', metavar='<dir>', action=ExpandVars, type=str,
-                        required=True, help='path to the output/working directory.')
-    parser.add_argument('--purge', required=False, help='purge the working directory at startup.',
-                        action='store_true', default=False)
-    parser.add_argument('-r', '--resume', required=False, help='use VM snapshot from existing workdir (for cov/gdb)',
-                        action='store_true', default=False)
-    parser.add_argument('-p', '--processes', required=False, metavar='<n>', type=int, default=1,
-                        help='number of parallel processes')
-    parser.add_argument('-v', '--verbose', required=False, action='store_true', default=False,
-                        help='enable verbose output')
-    parser.add_argument('-q', '--quiet', help='only print warnings and errors to console',
-                        required=False, action='store_true', default=False)
-    parser.add_argument('-l', '--log', help='enable logging to $workdir/debug.log',
-                        action='store_true', default=False)
-    parser.add_argument('--debug', help='enable extra debug checks and max logging verbosity',
-                        action='store_true', default=False)
+    parser.add_argument('-w', '--work-dir', metavar='<dir>', type=str, required=True, help='path to the output/working directory.')
+    # parser.add_argument('--purge', required=False, help='purge the working directory at startup.',
+    #                     action='store_true', default=False)
+    # parser.add_argument('-r', '--resume', required=False, help='use VM snapshot from existing workdir (for cov/gdb)',
+    #                     action='store_true', default=False)
+    # parser.add_argument('-p', '--processes', required=False, metavar='<n>', type=int, default=1,
+    #                     help='number of parallel processes')
+    # parser.add_argument('-v', '--verbose', required=False, action='store_true', default=False,
+    #                     help='enable verbose output')
+    # parser.add_argument('-q', '--quiet', help='only print warnings and errors to console',
+    #                     required=False, action='store_true', default=False)
+    # parser.add_argument('-l', '--log', help='enable logging to $workdir/debug.log',
+    #                     action='store_true', default=False)
+    # parser.add_argument('--debug', help='enable extra debug checks and max logging verbosity',
+    #                     action='store_true', default=False)
 
 # kAFL/Fuzzer-specific options
 def add_args_fuzzer(parser):
-    parser.add_argument('--seed-dir', required=False, metavar='<dir>', action=ExpandVars,
-                        type=parse_is_dir, help='path to the seed directory.')
-    parser.add_argument('--dict', required=False, metavar='<file>', type=parse_is_file, action=ExpandVars,
-                        help='import dictionary file for use in havoc stage.', default=None)
-    parser.add_argument('--funky', required=False, help='perform extra validation and store funky inputs.',
-                        action='store_true', default=False)
+    parser.add_argument('--seed-dir', metavar='<dir>', help='path to the seed directory.')
+    # parser.add_argument('--dict', required=False, metavar='<file>', type=parse_is_file, action=ExpandVars,
+    #                     help='import dictionary file for use in havoc stage.', default=None)
+    # parser.add_argument('--funky', required=False, help='perform extra validation and store funky inputs.',
+    #                     action='store_true', default=False)
 
-    parser.add_argument('-D', '--afl-dumb-mode', required=False, help='skip deterministic stage (dumb mode)',
-                        action='store_true', default=False)
-    parser.add_argument('--afl-no-effector', required=False, help=hidden('disable effector maps during deterministic stage'),
-                        action='store_true', default=False)
-    parser.add_argument('--afl-skip-zero', required=False, help=hidden('skip zero bytes during deterministic stage'),
-                        action='store_true', default=False)
-    parser.add_argument('--afl-skip-range', required=False, type=parse_ignore_range, metavar="<start-end>",
-                        action='append', help=hidden('skip byte range during deterministic stage'))
-    parser.add_argument('--afl-arith-max', metavar='<n>', help=hidden("max arithmetic range for afl_arith_n mutation"),
-                        type=int, required=False, default=35)
+    # parser.add_argument('-D', '--afl-dumb-mode', required=False, help='skip deterministic stage (dumb mode)',
+    #                     action='store_true', default=False)
+    # parser.add_argument('--afl-no-effector', required=False, help=hidden('disable effector maps during deterministic stage'),
+    #                     action='store_true', default=False)
+    # parser.add_argument('--afl-skip-zero', required=False, help=hidden('skip zero bytes during deterministic stage'),
+    #                     action='store_true', default=False)
+    # parser.add_argument('--afl-skip-range', required=False, type=parse_ignore_range, metavar="<start-end>",
+    #                     action='append', help=hidden('skip byte range during deterministic stage'))
+    # parser.add_argument('--afl-arith-max', metavar='<n>', help=hidden("max arithmetic range for afl_arith_n mutation"),
+    #                     type=int, required=False, default=35)
 
-    parser.add_argument('--radamsa', required=False, help='enable Radamsa as additional havoc stage',
-                        action='store_true', default=False)
-    parser.add_argument('--grimoire', required=False, help='enable Grimoire analysis & mutation stages',
-                        action='store_true', default=False)
-    parser.add_argument('--redqueen', required=False, help='enable Redqueen trace & insertion stages',
-                        action='store_true', default=False)
-    parser.add_argument('--redqueen-hashes', required=False, help=hidden('enable Redqueen checksum fixer (broken)'),
-                        action='store_true', default=False)
-    parser.add_argument('--redqueen-hammer', required=False, help=hidden('enable Redqueen jump table hammering'),
-                        action='store_true', default=False)
-    parser.add_argument('--redqueen-simple', required=False, help=hidden('do not ignore simple matches in Redqueen'),
-                        action='store_true', default=False)
-    parser.add_argument('--cpu-offset', metavar='<n>', help="start CPU pinning at offset <n>",
-                        type=int, default=0, required=False)
-    parser.add_argument('--abort-time', metavar='<n>', help="exit after <n> hours",
-                        type=float, required=False, default=None)
-    parser.add_argument('--abort-exec', metavar='<n>', help="exit after max <n> executions",
-                        type=int, required=False, default=None)
-    parser.add_argument('-ts', '--t-soft', dest='timeout_soft', required=False, metavar='<n>', help="soft execution timeout (in seconds)",
-                        type=float, default=1/1000)
-    parser.add_argument('-tc', '--t-check', dest='timeout_check', required=False, help="validate timeouts against hard limit (slower)",
-                        action='store_true', default=False)
-    parser.add_argument('--kickstart', metavar='<n>', help="kickstart fuzzing with <n> byte random strings (default 256, 0 to disable)",
-                        type=int, required=False, default=256)
-    parser.add_argument('--radamsa-path', metavar='<file>', help=hidden('path to radamsa executable'),
-                        type=parse_is_file, action=ExpandVars, required=False, default=None)
+    # parser.add_argument('--radamsa', required=False, help='enable Radamsa as additional havoc stage',
+    #                     action='store_true', default=False)
+    # parser.add_argument('--grimoire', required=False, help='enable Grimoire analysis & mutation stages',
+    #                     action='store_true', default=False)
+    # parser.add_argument('--redqueen', required=False, help='enable Redqueen trace & insertion stages',
+    #                     action='store_true', default=False)
+    # parser.add_argument('--redqueen-hashes', required=False, help=hidden('enable Redqueen checksum fixer (broken)'),
+    #                     action='store_true', default=False)
+    # parser.add_argument('--redqueen-hammer', required=False, help=hidden('enable Redqueen jump table hammering'),
+    #                     action='store_true', default=False)
+    # parser.add_argument('--redqueen-simple', required=False, help=hidden('do not ignore simple matches in Redqueen'),
+    #                     action='store_true', default=False)
+    # parser.add_argument('--cpu-offset', metavar='<n>', help="start CPU pinning at offset <n>",
+    #                     type=int, default=0, required=False)
+    # parser.add_argument('--abort-time', metavar='<n>', help="exit after <n> hours",
+    #                     type=float, required=False, default=None)
+    # parser.add_argument('--abort-exec', metavar='<n>', help="exit after max <n> executions",
+    #                     type=int, required=False, default=None)
+    # parser.add_argument('-ts', '--t-soft', dest='timeout_soft', required=False, metavar='<n>', help="soft execution timeout (in seconds)",
+    #                     type=float, default=1/1000)
+    # parser.add_argument('-tc', '--t-check', dest='timeout_check', required=False, help="validate timeouts against hard limit (slower)",
+    #                     action='store_true', default=False)
+    # parser.add_argument('--kickstart', metavar='<n>', help="kickstart fuzzing with <n> byte random strings (default 256, 0 to disable)",
+    #                     type=int, required=False, default=256)
+    # parser.add_argument('--radamsa-path', metavar='<file>', help=hidden('path to radamsa executable'),
+    #                     type=parse_is_file, action=ExpandVars, required=False, default=None)
 
 
 # Qemu/Worker-specific launch options
 def add_args_qemu(parser):
 
-    config_default_base   = '-enable-kvm -machine kAFL64-v1 -cpu kAFL64-Hypervisor-v1,+vmx -no-reboot -net none -display none'
+    # config_default_base   = '-enable-kvm -machine kAFL64-v1 -cpu kAFL64-Hypervisor-v1,+vmx -no-reboot -net none -display none'
 
     # BIOS/Image/Kernel load modes are partly exclusive, but we need at least one of them
-    parser.add_argument('--image', dest='qemu_image', metavar='<qcow2>', required=False, action=ExpandVars, 
-                        type=parse_is_file, help='path to Qemu disk image.')
-    parser.add_argument('--snapshot', dest='qemu_snapshot', metavar='<dir>', required=False, action=ExpandVars,
-                        type=parse_is_dir, help='path to VM pre-snapshot directory.')
-    parser.add_argument('--bios', dest='qemu_bios', metavar='<file>', required=False, action=ExpandVars, type=parse_is_file,
-                        help='path to the BIOS image.')
-    parser.add_argument('--kernel', dest='qemu_kernel', metavar='<file>', required=False, action=ExpandVars,
-                        type=parse_is_file, help='path to the Kernel image.')
-    parser.add_argument('--initrd', dest='qemu_initrd', metavar='<file>', required=False, action=ExpandVars, type=parse_is_file,
-                        help='path to the initrd/initramfs file.')
-    parser.add_argument('--append', dest='qemu_append', metavar='<str>', help='Qemu -append option',
-                        type=str, required=False, default=None)
-    parser.add_argument('-m', '--memory', dest='qemu_memory', metavar='<n>', help='size of VM RAM in MB (default: 256).',
-                        default=256, type=int)
+    parser.add_argument('--image', dest='qemu_image', metavar='<qcow2>', help='path to Qemu disk image.')
+    # parser.add_argument('--snapshot', dest='qemu_snapshot', metavar='<dir>', required=False, action=ExpandVars,
+    #                     type=parse_is_dir, help='path to VM pre-snapshot directory.')
+    # parser.add_argument('--bios', dest='qemu_bios', metavar='<file>', required=False, action=ExpandVars, type=parse_is_file,
+    #                     help='path to the BIOS image.')
+    # parser.add_argument('--kernel', dest='qemu_kernel', metavar='<file>', required=False, action=ExpandVars,
+    #                     type=parse_is_file, help='path to the Kernel image.')
+    # parser.add_argument('--initrd', dest='qemu_initrd', metavar='<file>', required=False, action=ExpandVars, type=parse_is_file,
+    #                     help='path to the initrd/initramfs file.')
+    # parser.add_argument('--append', dest='qemu_append', metavar='<str>', help='Qemu -append option',
+    #                     type=str, required=False, default=None)
+    # parser.add_argument('-m', '--memory', dest='qemu_memory', metavar='<n>', help='size of VM RAM in MB (default: 256).',
+    #                     default=256, type=int)
 
-    parser.add_argument('--qemu-base', metavar='<str>', action=ExpandVars, help='base Qemu config (check defaults!)',
-                        type=str, required=False, default=config_default_base)
-    parser.add_argument('--qemu-serial', metavar='<str>', help='Qemu serial emulation (redirected to file, see defaults)',
-                        type=str, required=False, default=None)
-    parser.add_argument('--qemu-extra', metavar='<str>', action=ExpandVars, help='extra Qemu config (check defaults!)',
-                        type=str, required=False, default=None)
-    parser.add_argument('--qemu-path', metavar='<file>', action=ExpandVars, help=hidden('path to Qemu-Nyx executable'),
-                        type=parse_is_file, required=True, default=None)
+    # parser.add_argument('--qemu-base', metavar='<str>', action=ExpandVars, help='base Qemu config (check defaults!)',
+    #                     type=str, required=False, default=config_default_base)
+    # parser.add_argument('--qemu-serial', metavar='<str>', help='Qemu serial emulation (redirected to file, see defaults)',
+    #                     type=str, required=False, default=None)
+    # parser.add_argument('--qemu-extra', metavar='<str>', action=ExpandVars, help='extra Qemu config (check defaults!)',
+    #                     type=str, required=False, default=None)
+    # parser.add_argument('--qemu-path', metavar='<file>', action=ExpandVars, help=hidden('path to Qemu-Nyx executable'),
+    #                     type=parse_is_file, required=True, default=None)
 
-    parser.add_argument('-ip0', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
-                        help='set IP trace filter range 0 (should be page-aligned)')
-    parser.add_argument('-ip1', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
-                        help='Set IP trace filter range 1 (should be page-aligned)')
-    parser.add_argument('-ip2', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
-                        help=hidden('Set IP trace filter range 2 (should be page-aligned)'))
-    parser.add_argument('-ip3', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
-                        help=hidden('Set IP trace filter range 3 (should be page-aligned)'))
+    # parser.add_argument('-ip0', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
+    #                     help='set IP trace filter range 0 (should be page-aligned)')
+    # parser.add_argument('-ip1', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
+    #                     help='Set IP trace filter range 1 (should be page-aligned)')
+    # parser.add_argument('-ip2', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
+    #                     help=hidden('Set IP trace filter range 2 (should be page-aligned)'))
+    # parser.add_argument('-ip3', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
+    #                     help=hidden('Set IP trace filter range 3 (should be page-aligned)'))
 
-    parser.add_argument('--sharedir', metavar='<dir>', required=False, action=ExpandVars,
-                        type=parse_is_dir, help='path to the page buffer share directory.')
-    parser.add_argument('-R', '--reload', metavar='<n>', help='snapshot-reload every N execs (default: 1)',
-                        type=int, required=False, default=1)
-    parser.add_argument('--gdbserver', required=False, help=hidden('enable Qemu gdbserver (use via kafl_debug.py!'),
-                        action='store_true', default=False)
-    parser.add_argument('--log-hprintf', required=False, help="redirect hprintf logging to workdir/hprintf_NN.log",
-                        action='store_true', default=False)
-    parser.add_argument('--log-crashes', required=False, help="store hprintf logs only for crashes/timeouts",
-                        action='store_true', default=False)
-    parser.add_argument('-t', '--t-hard', dest='timeout_hard', required=False, metavar='<n>', help="hard execution timeout (seconds)",
-                        type=float, default=4)
-    parser.add_argument('--payload-size', metavar='<n>', help=hidden("maximum payload size in bytes (minus headers)"),
-                        type=int, required=False, default=131072)
-    parser.add_argument('--bitmap-size', metavar='<n>', help="size of feedback bitmap (must be power of 2)",
-                        type=int, required=False, default=65536)
-    parser.add_argument('--trace', required=False, help='store binary PT traces of new inputs (fast).',
-                        action='store_true', default=False)
-    parser.add_argument("--trace-cb", required=False, help='store decoded PT traces of new inputs (slow).',
-                        action='store_true', default=False)
+    # parser.add_argument('--sharedir', metavar='<dir>', required=False, action=ExpandVars,
+    #                     type=parse_is_dir, help='path to the page buffer share directory.')
+    # parser.add_argument('-R', '--reload', metavar='<n>', help='snapshot-reload every N execs (default: 1)',
+    #                     type=int, required=False, default=1)
+    # parser.add_argument('--gdbserver', required=False, help=hidden('enable Qemu gdbserver (use via kafl_debug.py!'),
+    #                     action='store_true', default=False)
+    # parser.add_argument('--log-hprintf', required=False, help="redirect hprintf logging to workdir/hprintf_NN.log",
+    #                     action='store_true', default=False)
+    # parser.add_argument('--log-crashes', required=False, help="store hprintf logs only for crashes/timeouts",
+    #                     action='store_true', default=False)
+    # parser.add_argument('-t', '--t-hard', dest='timeout_hard', required=False, metavar='<n>', help="hard execution timeout (seconds)",
+    #                     type=float, default=4)
+    # parser.add_argument('--payload-size', metavar='<n>', help=hidden("maximum payload size in bytes (minus headers)"),
+    #                     type=int, required=False, default=131072)
+    # parser.add_argument('--bitmap-size', metavar='<n>', help="size of feedback bitmap (must be power of 2)",
+    #                     type=int, required=False, default=65536)
+    # parser.add_argument('--trace', required=False, help='store binary PT traces of new inputs (fast).',
+    #                     action='store_true', default=False)
+    # parser.add_argument("--trace-cb", required=False, help='store decoded PT traces of new inputs (slow).',
+    #                     action='store_true', default=False)
 
 
 # kafl_debug launch options
@@ -252,73 +246,16 @@ class ConfigParserBuilder():
         subcommands = parser.add_subparsers()
         # add subcommands
         self._add_fuzz_subcommand(subcommands)
-        self._add_debug_subcommand(subcommands)
-        self._add_cov_subcommand(subcommands)
-        self._add_gui_subcommand(subcommands)
-        self._add_plot_subcommand(subcommands)
-        self._add_mcat_subcommand(subcommands)
+        # self._add_debug_subcommand(subcommands)
+        # self._add_cov_subcommand(subcommands)
+        # self._add_gui_subcommand(subcommands)
+        # self._add_plot_subcommand(subcommands)
+        # self._add_mcat_subcommand(subcommands)
         return parser
 
     def _base_parser(self):
         short_usage = '%(prog)s --work-dir <dir> [fuzzer options] [qemu options]'
         return argparse.ArgumentParser(usage=short_usage, add_help=False, fromfile_prefix_chars='@')
-
-    def _parse_with_config(self, parser):
-
-        config = confuse.Configuration('kafl', modname='kafl_fuzzer')
-
-        # check default config locations
-        config.read(defaults=True, user=True)
-
-        # ENV based config
-        if 'KAFL_CONFIG_FILE' in os.environ:
-            try:
-                logger.debug(f"Checking configuration at KAFL_CONFIG_FILE: {os.environ['KAFL_CONFIG_FILE']}")
-                config.set_file(os.environ['KAFL_CONFIG_FILE'])
-            except confuse.exceptions.ConfigError:
-                logger.exception("Failed to read configuration at $KAFL_CONFIG_FILE")
-                sys.exit(1)
-
-        # local / workdir config
-        workdir_config = os.path.join(os.getcwd(), 'kafl.yaml')
-        logger.debug(f"Checking configuration at CWD: {workdir_config}")
-        if os.path.exists(workdir_config):
-            try:
-                config.set_file(workdir_config)
-            except confuse.exceptions.ConfigError:
-                logger.exception("Failed to read configuration at $CWD")
-                sys.exit(1)
-
-        # merge all configs into a flat dictionary, delimiter = ':'
-        config_values = FlatDict(config.flatten())
-        logger.debug("Options picked up from config: %s" % str(config_values))
-
-        # adopt defaults into parser, fixup 'required' and file/path fields
-        for action in parser._actions:
-            #print("action: %s" % repr(action))
-            if action.dest in config_values:
-                if isinstance(action, ExpandVars) and config[action.dest].get():
-                    action.default = config[action.dest].as_str_expanded()
-                elif isinstance(action, argparse._AppendAction):
-                    assert("append are not supported in in yaml config")
-                    #action.default = [config[action.dest].as_str()]
-                else:
-                    action.default = config[action.dest].get()
-                action.required = False
-                config_values.pop(action.dest)
-        
-        # remove options not defined in argparse (set_defaults() imports everything)
-        for option in config_values:
-            logger.debug("Dropped unrecognized option '%s'." % option)
-            config_values.pop(option)
-
-        # allow unrecognized options?
-        #parser.set_defaults(**config_values)
-
-        args = parser.parse_args()
-        logger.debug("Final parsed args: %s" % str(vars(args)))
-
-        return args
 
     def _add_fuzz_subcommand(self, parser: _SubParsersAction):
         fuzz_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.FUZZ.name.lower(), help="kAFL Fuzzer")
