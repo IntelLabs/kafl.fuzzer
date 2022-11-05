@@ -130,6 +130,7 @@ class WorkerTask:
                 self.loop()
             else:
                 self.logger.error("Failed to launch Qemu.")
+                self.conn.send_node_abort(None, None)
         except QemuIOException:
             # Qemu has likely died on us - try to restart?
             pass

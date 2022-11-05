@@ -182,7 +182,7 @@ class qemu:
             except:
                 pass
 
-        self.logger.info("exit code: %s", str(self.process.returncode))
+        self.logger.debug(f"Qemu exit code: {self.process.returncode}")
 
         if len(output) > 0:
             header = "\n=================<%s Console Output>==================\n" %self
@@ -269,10 +269,10 @@ class qemu:
         try:
             self.__qemu_connect()
             self.__qemu_handshake()
-        except (OSError, BrokenPipeError) as e:
+        except (OSError, BrokenPipeError, QemuIOException) as e:
             if not self.exiting:
                 self.logger.error("Failed to connect to Qemu: %s", str(e))
-                self.shutdown()
+                self.async_exit()
             return False
 
         self.logger.debug("Handshake done.")

@@ -117,10 +117,13 @@ class ManagerTask:
                     raise ValueError("unknown message type {}".format(msg))
 
             # start printing status when first instance is ready - or exit when they died
-            if len(workers_ready) > 0:
+            if workers_ready:
                 if (len(workers_ready - workers_aborted)) == 0:
                     raise SystemExit("All Workers have died, or aborted before they became ready. :-/")
                 self.statistics.maybe_write_stats()
+            elif workers_aborted:
+                raise SystemExit("Workers aborted before becoming ready. Likely broken VM or agent setup.")
+
             self.check_abort_condition()
 
 
