@@ -101,21 +101,23 @@ def gdb_session(config, qemu_verbose=True, notifiers=True):
         logger.info("Shutting down..")
         q.async_exit()
 
+def store_traces(config, qid, basename, exec_hash):
+    if config.trace:
+        shutil.move(config.work_dir + f"/pt_trace_dump_{qid}",
+                    config.work_dir + f"/traces/{basename}_{exec_hash}.bin")
+
+
 def execute_once(config, qemu_verbose=False, notifiers=True):
     payload_file = config.input
     resume = config.resume
     null_hash = ExecutionResult.get_null_hash(config.bitmap_size)
 
+    qid = 1337 # default debug instance
+
     logger.info("Execute payload %s.. " % payload_file)
 
-    q = qemu(1337, config, debug_mode=False, notifiers=notifiers, resume=resume)
+    q = qemu(qid, config, debug_mode=False, notifiers=notifiers, resume=resume)
     assert q.start(), "Failed to start Qemu?"
-
-
-    store_traces = config.trace
-    if store_traces:
-        trace_out = config.work_dir + "/redqueen_workdir_1337/pt_trace_results.txt"
-        trace_dir  = config.work_dir + "/traces/"
 
     payload = read_binary_file(payload_file)
 
@@ -124,12 +126,7 @@ def execute_once(config, qemu_verbose=False, notifiers=True):
         payload = payload[:payload_limit]
 
     q.set_payload(payload)
-    #q.send_payload() ## XXX first run has different trace?!
-    if store_traces:
-        result = q.execute_in_trace_mode()
-    else:
-        result = q.send_payload()
-
+    result = q.send_payload()
     print("Exit reason: %s" % result.exit_reason)
 
     current_hash = result.hash()
@@ -137,8 +134,9 @@ def execute_once(config, qemu_verbose=False, notifiers=True):
     if null_hash == current_hash:
         logger.warn("Null hash returned!")
 
-    if store_traces:
-        shutil.copyfile(trace_out, trace_dir + "/trace_%s_%s.txt" % (os.path.basename(payload_file),current_hash))
+    store_traces(config, qid,
+                 os.path.basename(payload_file),
+                 current_hash)
 
     q.shutdown()
     return 0
@@ -195,16 +193,11 @@ def debug_non_det(config, max_execs=0):
     assert "ip0" in config, "Must set -ip0 range in order to obtain PT traces."
     payload = read_binary_file(payload_file)
 
-    q = qemu(1337, config, debug_mode=False, resume=resume)
+    qid = 1337 # default debug instance
+    q = qemu(qid, config, debug_mode=False, resume=resume)
     assert q.start(), "Failed to launch Qemu."
 
     q.set_timeout(0)
-
-    store_traces = config.trace
-    if store_traces:
-        trace_out = config.work_dir + "/redqueen_workdir_1337/pt_trace_results.txt"
-        trace_dir  = config.work_dir + "/noise/"
-        os.makedirs(trace_dir, exist_ok=True)
 
     payload_limit = q.get_payload_limit()
 
@@ -217,18 +210,8 @@ def debug_non_det(config, max_execs=0):
     try:
         q.set_payload(payload)
 
-        ## XXX first run has different trace?!
-        #if store_traces: 
-        #    exec_res = q.execute_in_trace_mode()
-        #else:
-        #    exec_res = q.send_payload()
-
         time.sleep(delay)
-
-        if store_traces: 
-            exec_res = q.execute_in_trace_mode()
-        else:
-            exec_res = q.send_payload()
+        exec_res = q.send_payload()
 
         first_hash = exec_res.hash()
         hashes[first_hash] = 1
@@ -236,8 +219,9 @@ def debug_non_det(config, max_execs=0):
         logger.info("Null Hash:  " + null_hash)
         logger.info("First Hash: " + first_hash)
 
-        if store_traces:
-            shutil.copyfile(trace_out, trace_dir + "/trace_%s_%s.txt" % (os.path.basename(payload_file),first_hash))
+        store_traces(config, qid,
+                    os.path.basename(payload_file),
+                    first_hash)
 
         total = 0
         iterations = 1
@@ -253,10 +237,7 @@ def debug_non_det(config, max_execs=0):
                 #assert q.start(), "Failed to launch Qemu."
                 q.set_payload(payload)
                 time.sleep(delay)
-                if store_traces: 
-                    exec_res = q.execute_in_trace_mode()
-                else:
-                    exec_res = q.send_payload()
+                exec_res = q.send_payload()
 
                 if exec_res.is_crash():
                     logger.info("\nExit reason `%s` - restarting..." % exec_res.exit_reason)
@@ -268,8 +249,9 @@ def debug_non_det(config, max_execs=0):
                     hashes[hash_value] = hashes[hash_value] + 1
                 else:
                     hashes[hash_value] = 1
-                    if store_traces:
-                        shutil.copyfile(trace_out, trace_dir + "/trace_%s_%s.txt" % (os.path.basename(payload_file), hash_value))
+                    store_traces(config, qid,
+                                 os.path.basename(payload_file),
+                                 current_hash)
                 if hash_value != first_hash:
                     hash_mismatch += 1
                 execs += 1
