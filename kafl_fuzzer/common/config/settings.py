@@ -1,4 +1,5 @@
 import os
+import re
 from contextlib import suppress
 from pathlib import Path
 from argparse import Namespace
@@ -57,6 +58,19 @@ def is_dir(value) -> bool:
 def is_file(value) -> bool:
     return Path(value).is_file()
 
+def parse_ignore_range(string: str) -> bool:
+    m = re.match(r"(\d+)(?:-(\d+))?$", string)
+    if not m:
+        raise argparse.ArgumentTypeError("'" + string + "' is not a range of number.")
+    start = min(int(m.group(1)), int(m.group(2)))
+    end = max(int(m.group(1)), int(m.group(2))) or start
+    if end > (128 << 10):
+        raise argparse.ArgumentTypeError("Value out of range (max 128KB).")
+
+    if start == 0 and end == (128 << 10):
+        raise argparse.ArgumentTypeError("Invalid range specified.")
+    return list([start, end])
+
 # register validators
 settings.validators.register(
     # general
@@ -70,6 +84,24 @@ settings.validators.register(
     Validator("debug", default=False, cast=bool),
     # fuzz
     Validator("seed_dir", default=None, condition=is_dir),
+    Validator("dict", default=None, condition=is_file),
+    Validator("funky", default=False, cast=bool),
+    Validator("afl_dump_mode", default=False, cast=bool),
+    Validator("afl_skip_zero", default=False, cast=bool),
+    # Validator("afl-skip-range", default=None),
+    Validator("afl_arith_max", default=DEFAULT_AFL_ARTIH_MAX, cast=int),
+    Validator("radamsa", default=False, cast=bool),
+    Validator("redqueen", default=False, cast=bool),
+    Validator("redqueen_hashes", default=False, cast=bool),
+    Validator("redqueen_hammer", default=False, cast=bool),
+    Validator("redqueen_simple", default=False, cast=bool),
+    Validator("cpu_offset", default=DEFAULT_CPU_OFFSET, cast=int),
+    Validator("abort_time", default=None),
+    Validator("abort_exec", default=None),
+    Validator("timeout_soft", default=DEFAULT_TIMEOUT_SOFT, cast=float),
+    Validator("timeout_check", default=False, cast=bool),
+    Validator("kickstart", default=DEFAULT_KICKSTART, cast=int),
+    Validator("radamsa_path", default=None, condition=is_file),
     # qemu
     Validator("qemu_image", default=None, condition=is_file)
 )

@@ -28,27 +28,6 @@ class KaflSubcommands(Enum):
 
 logger = logging.getLogger(__name__)
 
-class ExpandVars(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, os.path.expandvars(values))
-
-
-def parse_is_dir(dirname):
-    if not os.path.isdir(dirname):
-        msg = "{0} is not a directory".format(dirname)
-        raise argparse.ArgumentTypeError(msg)
-    else:
-        return dirname
-
-
-def parse_is_file(dirname):
-    if not os.path.isfile(dirname):
-        msg = "{0} is not a file".format(dirname)
-        raise argparse.ArgumentTypeError(msg)
-    else:
-        return dirname
-
-
 def parse_ignore_range(string):
     m = re.match(r"(\d+)(?:-(\d+))?$", string)
     if not m:
@@ -86,12 +65,12 @@ def hidden(msg, unmask=False):
 def add_args_general(parser):
     parser.add_argument('-h', '--help', action='help',
                         help='show this help message and exit')
-    parser.add_argument('-w', '--work-dir', metavar='<dir>', type=str, required=True, help='path to the output/working directory.')
+    parser.add_argument('-w', '--work-dir', metavar='<dir>', required=True, help='path to the output/working directory.')
     parser.add_argument('--purge', required=False, help='purge the working directory at startup.',
                         action='store_true', default=False)
     parser.add_argument('-r', '--resume', required=False, help='use VM snapshot from existing workdir (for cov/gdb)',
                         action='store_true', default=False)
-    parser.add_argument('-p', '--processes', required=False, metavar='<n>', type=int,
+    parser.add_argument('-p', '--processes', required=False, metavar='<n>',
                         help='number of parallel processes')
     parser.add_argument('-v', '--verbose', required=False, action='store_true', default=False,
                         help='enable verbose output')
@@ -105,48 +84,32 @@ def add_args_general(parser):
 # kAFL/Fuzzer-specific options
 def add_args_fuzzer(parser):
     parser.add_argument('--seed-dir', metavar='<dir>', help='path to the seed directory.')
-    # parser.add_argument('--dict', required=False, metavar='<file>', type=parse_is_file, action=ExpandVars,
-    #                     help='import dictionary file for use in havoc stage.', default=None)
-    # parser.add_argument('--funky', required=False, help='perform extra validation and store funky inputs.',
-    #                     action='store_true', default=False)
-
-    # parser.add_argument('-D', '--afl-dumb-mode', required=False, help='skip deterministic stage (dumb mode)',
-    #                     action='store_true', default=False)
-    # parser.add_argument('--afl-no-effector', required=False, help=hidden('disable effector maps during deterministic stage'),
-    #                     action='store_true', default=False)
-    # parser.add_argument('--afl-skip-zero', required=False, help=hidden('skip zero bytes during deterministic stage'),
-    #                     action='store_true', default=False)
-    # parser.add_argument('--afl-skip-range', required=False, type=parse_ignore_range, metavar="<start-end>",
-    #                     action='append', help=hidden('skip byte range during deterministic stage'))
-    # parser.add_argument('--afl-arith-max', metavar='<n>', help=hidden("max arithmetic range for afl_arith_n mutation"),
-    #                     type=int, required=False, default=35)
-
-    # parser.add_argument('--radamsa', required=False, help='enable Radamsa as additional havoc stage',
-    #                     action='store_true', default=False)
-    # parser.add_argument('--grimoire', required=False, help='enable Grimoire analysis & mutation stages',
-    #                     action='store_true', default=False)
-    # parser.add_argument('--redqueen', required=False, help='enable Redqueen trace & insertion stages',
-    #                     action='store_true', default=False)
-    # parser.add_argument('--redqueen-hashes', required=False, help=hidden('enable Redqueen checksum fixer (broken)'),
-    #                     action='store_true', default=False)
-    # parser.add_argument('--redqueen-hammer', required=False, help=hidden('enable Redqueen jump table hammering'),
-    #                     action='store_true', default=False)
-    # parser.add_argument('--redqueen-simple', required=False, help=hidden('do not ignore simple matches in Redqueen'),
-    #                     action='store_true', default=False)
-    # parser.add_argument('--cpu-offset', metavar='<n>', help="start CPU pinning at offset <n>",
-    #                     type=int, default=0, required=False)
-    # parser.add_argument('--abort-time', metavar='<n>', help="exit after <n> hours",
-    #                     type=float, required=False, default=None)
-    # parser.add_argument('--abort-exec', metavar='<n>', help="exit after max <n> executions",
-    #                     type=int, required=False, default=None)
-    # parser.add_argument('-ts', '--t-soft', dest='timeout_soft', required=False, metavar='<n>', help="soft execution timeout (in seconds)",
-    #                     type=float, default=1/1000)
-    # parser.add_argument('-tc', '--t-check', dest='timeout_check', required=False, help="validate timeouts against hard limit (slower)",
-    #                     action='store_true', default=False)
-    # parser.add_argument('--kickstart', metavar='<n>', help="kickstart fuzzing with <n> byte random strings (default 256, 0 to disable)",
-    #                     type=int, required=False, default=256)
-    # parser.add_argument('--radamsa-path', metavar='<file>', help=hidden('path to radamsa executable'),
-    #                     type=parse_is_file, action=ExpandVars, required=False, default=None)
+    parser.add_argument('--dict', required=False, metavar='<file>',
+                        help='import dictionary file for use in havoc stage.', default=None)
+    parser.add_argument('--funky', required=False, help='perform extra validation and store funky inputs.',
+                        action='store_true', default=False)
+    parser.add_argument('-D', '--afl-dumb-mode', required=False, help='skip deterministic stage (dumb mode)',
+                        action='store_true', default=False)
+    parser.add_argument('--afl-no-effector', required=False, help=hidden('disable effector maps during deterministic stage'),
+                        action='store_true', default=False)
+    parser.add_argument('--afl-skip-zero', required=False, help=hidden('skip zero bytes during deterministic stage'),
+                        action='store_true', default=False)
+    # parser.add_argument('--afl-skip-range', required=False, type=parse_ignore_range, metavar="<start-end>", action='append',
+    #                     help=hidden('skip byte range during deterministic stage'))
+    parser.add_argument('--afl-arith-max', metavar='<n>', help=hidden("max arithmetic range for afl_arith_n mutation"), required=False)
+    parser.add_argument('--radamsa', required=False, action='store_true', help='enable Radamsa as additional havoc stage')
+    parser.add_argument('--grimoire', required=False, action='store_true', help='enable Grimoire analysis & mutation stages', default=False)
+    parser.add_argument('--redqueen', required=False, action='store_true', help='enable Redqueen trace & insertion stages', default=False)
+    parser.add_argument('--redqueen-hashes', required=False, action='store_true', help=hidden('enable Redqueen checksum fixer (broken)'), default=False)
+    parser.add_argument('--redqueen-hammer', required=False, action='store_true', help=hidden('enable Redqueen jump table hammering'), default=False)
+    parser.add_argument('--redqueen-simple', required=False, action='store_true', help=hidden('do not ignore simple matches in Redqueen'), default=False)
+    parser.add_argument('--cpu-offset', metavar='<n>', help="start CPU pinning at offset <n>", required=False)
+    parser.add_argument('--abort-time', metavar='<n>', help="exit after <n> hours", default=None)
+    parser.add_argument('--abort-exec', metavar='<n>', help="exit after max <n> executions", default=None)
+    parser.add_argument('-ts', '--t-soft', dest='timeout_soft', required=False, metavar='<n>', help="soft execution timeout (in seconds)")
+    parser.add_argument('-tc', '--t-check', dest='timeout_check', required=False, action='store_true', help="validate timeouts against hard limit (slower)", default=False)
+    parser.add_argument('--kickstart', metavar='<n>', help="kickstart fuzzing with <n> byte random strings (default 256, 0 to disable)", required=False)
+    parser.add_argument('--radamsa-path', metavar='<file>', help=hidden('path to radamsa executable'), required=False)
 
 
 # Qemu/Worker-specific launch options
