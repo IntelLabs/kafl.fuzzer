@@ -12,6 +12,20 @@ CUR_DIR = Path(__file__).parent
 APPNAME = 'kAFL'
 SETTINGS_FILENAME = "settings.yaml"
 
+# default values for Validators
+DEFAULT_PROCESSES = 1
+DEFAULT_CPU_OFFSET = 0
+DEFAULT_TIMEOUT_SOFT = 1/1000
+DEFAULT_KICKSTART = 256
+DEFAULT_AFL_ARTIH_MAX = 34
+DEFAULT_QEMU_MEMORY = 256
+DEFAULT_QEMU_CONFIG_BASE = '-enable-kvm -machine kAFL64-v1 -cpu kAFL64-Hypervisor-v1,+vmx -no-reboot -net none -display none'
+DEFAULT_RELOAD = 1
+DEFAULT_TIMEOUT_HARD = 4
+DEFAULT_PAYLOAD_SIZE = 131072
+DEFAULT_BITMAP_SIZE = 65536
+
+
 def app_settings_files() -> List[str]:
     settings_files = [
         # default config
@@ -46,7 +60,14 @@ def is_file(value) -> bool:
 # register validators
 settings.validators.register(
     # general
-    Validator("work_dir", must_exist=True),
+    Validator("work_dir", must_exist=True, cast=Path),
+    Validator("purge", default=False, cast=bool),
+    Validator("resume", default=False, cast=bool),
+    Validator("processes", default=DEFAULT_PROCESSES, cast=int),
+    Validator("verbose", default=False, cast=bool),
+    Validator("quiet", default=False, cast=bool),
+    Validator("log", default=False, cast=bool),
+    Validator("debug", default=False, cast=bool),
     # fuzz
     Validator("seed_dir", default=None, condition=is_dir),
     # qemu

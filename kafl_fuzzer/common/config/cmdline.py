@@ -87,20 +87,20 @@ def add_args_general(parser):
     parser.add_argument('-h', '--help', action='help',
                         help='show this help message and exit')
     parser.add_argument('-w', '--work-dir', metavar='<dir>', type=str, required=True, help='path to the output/working directory.')
-    # parser.add_argument('--purge', required=False, help='purge the working directory at startup.',
-    #                     action='store_true', default=False)
-    # parser.add_argument('-r', '--resume', required=False, help='use VM snapshot from existing workdir (for cov/gdb)',
-    #                     action='store_true', default=False)
-    # parser.add_argument('-p', '--processes', required=False, metavar='<n>', type=int, default=1,
-    #                     help='number of parallel processes')
-    # parser.add_argument('-v', '--verbose', required=False, action='store_true', default=False,
-    #                     help='enable verbose output')
-    # parser.add_argument('-q', '--quiet', help='only print warnings and errors to console',
-    #                     required=False, action='store_true', default=False)
-    # parser.add_argument('-l', '--log', help='enable logging to $workdir/debug.log',
-    #                     action='store_true', default=False)
-    # parser.add_argument('--debug', help='enable extra debug checks and max logging verbosity',
-    #                     action='store_true', default=False)
+    parser.add_argument('--purge', required=False, help='purge the working directory at startup.',
+                        action='store_true', default=False)
+    parser.add_argument('-r', '--resume', required=False, help='use VM snapshot from existing workdir (for cov/gdb)',
+                        action='store_true', default=False)
+    parser.add_argument('-p', '--processes', required=False, metavar='<n>', type=int,
+                        help='number of parallel processes')
+    parser.add_argument('-v', '--verbose', required=False, action='store_true', default=False,
+                        help='enable verbose output')
+    parser.add_argument('-q', '--quiet', help='only print warnings and errors to console',
+                        required=False, action='store_true', default=False)
+    parser.add_argument('-l', '--log', help='enable logging to $workdir/debug.log',
+                        action='store_true', default=False)
+    parser.add_argument('--debug', help='enable extra debug checks and max logging verbosity',
+                        action='store_true', default=False)
 
 # kAFL/Fuzzer-specific options
 def add_args_fuzzer(parser):
