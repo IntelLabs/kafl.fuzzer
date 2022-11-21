@@ -26,7 +26,6 @@ DEFAULT_TIMEOUT_HARD = 4
 DEFAULT_PAYLOAD_SIZE = 131072
 DEFAULT_BITMAP_SIZE = 65536
 
-
 def app_settings_files() -> List[str]:
     settings_files = [
         # default config
@@ -58,18 +57,31 @@ def is_dir(value) -> bool:
 def is_file(value) -> bool:
     return Path(value).is_file()
 
-def parse_ignore_range(string: str) -> bool:
-    m = re.match(r"(\d+)(?:-(\d+))?$", string)
-    if not m:
-        raise argparse.ArgumentTypeError("'" + string + "' is not a range of number.")
-    start = min(int(m.group(1)), int(m.group(2)))
-    end = max(int(m.group(1)), int(m.group(2))) or start
-    if end > (128 << 10):
-        raise argparse.ArgumentTypeError("Value out of range (max 128KB).")
+# TODO: should be used to validate --afl-skip-range
+# def parse_ignore_range(string: str) -> bool:
+#     m = re.match(r"(\d+)(?:-(\d+))?$", string)
+#     if not m:
+#         raise argparse.ArgumentTypeError("'" + string + "' is not a range of number.")
+#     start = min(int(m.group(1)), int(m.group(2)))
+#     end = max(int(m.group(1)), int(m.group(2))) or start
+#     if end > (128 << 10):
+#         raise argparse.ArgumentTypeError("Value out of range (max 128KB).")
 
-    if start == 0 and end == (128 << 10):
-        raise argparse.ArgumentTypeError("Invalid range specified.")
-    return list([start, end])
+#     if start == 0 and end == (128 << 10):
+#         raise argparse.ArgumentTypeError("Invalid range specified.")
+#     return list([start, end])
+
+def cast_ip_range_to_list(parameter: str) -> List[int]:
+    """Checks that a given IP range string is valid and returns a List of that range"""
+    m = re.match(r"([(0-9abcdef]{1,16})(?:-([0-9abcdef]{1,16}))?$", parameter.replace("0x", "").lower())
+    if not m:
+        raise ValueError(f"{parameter}: invalid range specified: not a number")
+    # check that start < end
+    start = min(int(m.group(1).replace("0x", ""), 16), int(m.group(2).replace("0x", ""), 16))
+    end = max(int(m.group(1).replace("0x", ""), 16), int(m.group(2).replace("0x", ""), 16)) or start
+    if start > end:
+        raise ValueError(f"{parameter}: invalid range specified: start > end")
+    return [start, end]
 
 # register validators
 settings.validators.register(
@@ -103,7 +115,31 @@ settings.validators.register(
     Validator("kickstart", default=DEFAULT_KICKSTART, cast=int),
     Validator("radamsa_path", default=None, condition=is_file),
     # qemu
-    Validator("qemu_image", default=None, condition=is_file)
+    Validator("qemu_image", default=None, condition=is_file),
+    Validator("qemu_snapshot", default=None, condition=is_dir),
+    Validator("qemu_bios", default=None, condition=is_file),
+    Validator("qemu_kernel", default=None, condition=is_file),
+    Validator("qemu_initrd", default=None, condition=is_file),
+    Validator("qemu_append", default=None),
+    Validator("qemu_memory", default=DEFAULT_QEMU_MEMORY, cast=int),
+    Validator("qemu_base", default=DEFAULT_QEMU_CONFIG_BASE),
+    Validator("qemu_serial", default=None),
+    Validator("qemu_extra", default=None),
+    Validator("qemu_path", condition=is_file),
+    Validator("ip0", default=None, cast=cast_ip_range_to_list),
+    Validator("ip1", default=None, cast=cast_ip_range_to_list),
+    Validator("ip2", default=None, cast=cast_ip_range_to_list),
+    Validator("ip3", default=None, cast=cast_ip_range_to_list),
+    Validator("sharedir", default=None, condition=is_dir),
+    Validator("reload", default=DEFAULT_RELOAD, cast=int),
+    Validator("gdbserver", default=False, cast=bool),
+    Validator("log_hprintf", default=False, cast=bool),
+    Validator("log_crashes", default=False, cast=bool),
+    Validator("timeout_hard", default=DEFAULT_TIMEOUT_HARD, cast=float),
+    Validator("payload_size", default=DEFAULT_PAYLOAD_SIZE, cast=int),
+    Validator("bitmap_size", default=DEFAULT_PAYLOAD_SIZE, cast=int),
+    Validator("trace", default=False, cast=bool),
+    Validator("trace_cb", default=False, cast=bool),
 )
 
 def update_from_namespace(namespace: Namespace):

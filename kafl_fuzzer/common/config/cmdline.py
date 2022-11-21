@@ -5,7 +5,6 @@
 
 import argparse
 import os
-import re
 import logging
 from enum import Enum, auto
 from argparse import _SubParsersAction, ArgumentParser
@@ -28,33 +27,7 @@ class KaflSubcommands(Enum):
 
 logger = logging.getLogger(__name__)
 
-def parse_ignore_range(string):
-    m = re.match(r"(\d+)(?:-(\d+))?$", string)
-    if not m:
-        raise argparse.ArgumentTypeError("'" + string + "' is not a range of number.")
-    start = min(int(m.group(1)), int(m.group(2)))
-    end = max(int(m.group(1)), int(m.group(2))) or start
-    if end > (128 << 10):
-        raise argparse.ArgumentTypeError("Value out of range (max 128KB).")
 
-    if start == 0 and end == (128 << 10):
-        raise argparse.ArgumentTypeError("Invalid range specified.")
-    return list([start, end])
-
-
-def parse_range_ip_filter(string):
-    m = re.match(r"([(0-9abcdef]{1,16})(?:-([0-9abcdef]{1,16}))?$", string.replace("0x", "").lower())
-    if not m:
-        raise argparse.ArgumentTypeError("'" + string + "' is not a range of number.")
-
-    # print(m.group(1))
-    # print(m.group(2))
-    start = min(int(m.group(1).replace("0x", ""), 16), int(m.group(2).replace("0x", ""), 16))
-    end = max(int(m.group(1).replace("0x", ""), 16), int(m.group(2).replace("0x", ""), 16)) or start
-
-    if start > end:
-        raise argparse.ArgumentTypeError("Invalid range specified.")
-    return list([start, end])
 
 def hidden(msg, unmask=False):
     if unmask or 'KAFL_CONFIG_DEBUG' in os.environ:
@@ -114,62 +87,35 @@ def add_args_fuzzer(parser):
 
 # Qemu/Worker-specific launch options
 def add_args_qemu(parser):
-
-    # config_default_base   = '-enable-kvm -machine kAFL64-v1 -cpu kAFL64-Hypervisor-v1,+vmx -no-reboot -net none -display none'
-
     # BIOS/Image/Kernel load modes are partly exclusive, but we need at least one of them
     parser.add_argument('--image', dest='qemu_image', metavar='<qcow2>', help='path to Qemu disk image.')
-    # parser.add_argument('--snapshot', dest='qemu_snapshot', metavar='<dir>', required=False, action=ExpandVars,
-    #                     type=parse_is_dir, help='path to VM pre-snapshot directory.')
-    # parser.add_argument('--bios', dest='qemu_bios', metavar='<file>', required=False, action=ExpandVars, type=parse_is_file,
-    #                     help='path to the BIOS image.')
-    # parser.add_argument('--kernel', dest='qemu_kernel', metavar='<file>', required=False, action=ExpandVars,
-    #                     type=parse_is_file, help='path to the Kernel image.')
-    # parser.add_argument('--initrd', dest='qemu_initrd', metavar='<file>', required=False, action=ExpandVars, type=parse_is_file,
-    #                     help='path to the initrd/initramfs file.')
-    # parser.add_argument('--append', dest='qemu_append', metavar='<str>', help='Qemu -append option',
-    #                     type=str, required=False, default=None)
-    # parser.add_argument('-m', '--memory', dest='qemu_memory', metavar='<n>', help='size of VM RAM in MB (default: 256).',
-    #                     default=256, type=int)
+    parser.add_argument('--snapshot', dest='qemu_snapshot', metavar='<dir>', required=False, help='path to VM pre-snapshot directory.')
+    parser.add_argument('--bios', dest='qemu_bios', metavar='<file>', required=False, help='path to the BIOS image.')
+    parser.add_argument('--kernel', dest='qemu_kernel', metavar='<file>', required=False, help='path to the Kernel image.')
+    parser.add_argument('--initrd', dest='qemu_initrd', metavar='<file>', required=False, help='path to the initrd/initramfs file.')
+    parser.add_argument('--append', dest='qemu_append', metavar='<str>', required=False, help='Qemu -append option')
+    parser.add_argument('-m', '--memory', dest='qemu_memory', metavar='<n>', help='size of VM RAM in MB (default: 256).')
 
-    # parser.add_argument('--qemu-base', metavar='<str>', action=ExpandVars, help='base Qemu config (check defaults!)',
-    #                     type=str, required=False, default=config_default_base)
-    # parser.add_argument('--qemu-serial', metavar='<str>', help='Qemu serial emulation (redirected to file, see defaults)',
-    #                     type=str, required=False, default=None)
-    # parser.add_argument('--qemu-extra', metavar='<str>', action=ExpandVars, help='extra Qemu config (check defaults!)',
-    #                     type=str, required=False, default=None)
-    # parser.add_argument('--qemu-path', metavar='<file>', action=ExpandVars, help=hidden('path to Qemu-Nyx executable'),
-    #                     type=parse_is_file, required=True, default=None)
+    parser.add_argument('--qemu-base', metavar='<str>', required=False, help='base Qemu config (check defaults!)')
+    parser.add_argument('--qemu-serial', metavar='<str>', required=False, help='Qemu serial emulation (redirected to file, see defaults)')
+    parser.add_argument('--qemu-extra', metavar='<str>', required=False, help='extra Qemu config (check defaults!)')
+    parser.add_argument('--qemu-path', metavar='<file>', help=hidden('path to Qemu-Nyx executable'))
 
-    # parser.add_argument('-ip0', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
-    #                     help='set IP trace filter range 0 (should be page-aligned)')
-    # parser.add_argument('-ip1', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
-    #                     help='Set IP trace filter range 1 (should be page-aligned)')
-    # parser.add_argument('-ip2', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
-    #                     help=hidden('Set IP trace filter range 2 (should be page-aligned)'))
-    # parser.add_argument('-ip3', required=False, default=None, metavar='<n-m>', type=parse_range_ip_filter,
-    #                     help=hidden('Set IP trace filter range 3 (should be page-aligned)'))
+    parser.add_argument('-ip0', required=False, metavar='<n-m>', help='set IP trace filter range 0 (should be page-aligned)')
+    parser.add_argument('-ip1', required=False, metavar='<n-m>', help='Set IP trace filter range 1 (should be page-aligned)')
+    parser.add_argument('-ip2', required=False, metavar='<n-m>', help=hidden('Set IP trace filter range 2 (should be page-aligned)'))
+    parser.add_argument('-ip3', required=False, metavar='<n-m>', help=hidden('Set IP trace filter range 3 (should be page-aligned)'))
 
-    # parser.add_argument('--sharedir', metavar='<dir>', required=False, action=ExpandVars,
-    #                     type=parse_is_dir, help='path to the page buffer share directory.')
-    # parser.add_argument('-R', '--reload', metavar='<n>', help='snapshot-reload every N execs (default: 1)',
-    #                     type=int, required=False, default=1)
-    # parser.add_argument('--gdbserver', required=False, help=hidden('enable Qemu gdbserver (use via kafl_debug.py!'),
-    #                     action='store_true', default=False)
-    # parser.add_argument('--log-hprintf', required=False, help="redirect hprintf logging to workdir/hprintf_NN.log",
-    #                     action='store_true', default=False)
-    # parser.add_argument('--log-crashes', required=False, help="store hprintf logs only for crashes/timeouts",
-    #                     action='store_true', default=False)
-    # parser.add_argument('-t', '--t-hard', dest='timeout_hard', required=False, metavar='<n>', help="hard execution timeout (seconds)",
-    #                     type=float, default=4)
-    # parser.add_argument('--payload-size', metavar='<n>', help=hidden("maximum payload size in bytes (minus headers)"),
-    #                     type=int, required=False, default=131072)
-    # parser.add_argument('--bitmap-size', metavar='<n>', help="size of feedback bitmap (must be power of 2)",
-    #                     type=int, required=False, default=65536)
-    # parser.add_argument('--trace', required=False, help='store binary PT traces of new inputs (fast).',
-    #                     action='store_true', default=False)
-    # parser.add_argument("--trace-cb", required=False, help='store decoded PT traces of new inputs (slow).',
-    #                     action='store_true', default=False)
+    parser.add_argument('--sharedir', metavar='<dir>', required=False, help='path to the page buffer share directory.')
+    parser.add_argument('-R', '--reload', metavar='<n>', required=False, help='snapshot-reload every N execs (default: 1)')
+    parser.add_argument('--gdbserver', required=False, action='store_true', help=hidden('enable Qemu gdbserver (use via kafl_debug.py!'))
+    parser.add_argument('--log-hprintf', required=False, action='store_true', help="redirect hprintf logging to workdir/hprintf_NN.log")
+    parser.add_argument('--log-crashes', required=False, action='store_true', help="store hprintf logs only for crashes/timeouts")
+    parser.add_argument('-t', '--t-hard', dest='timeout_hard', required=False, metavar='<n>', help="hard execution timeout (seconds)")
+    parser.add_argument('--payload-size', metavar='<n>', required=False, help=hidden("maximum payload size in bytes (minus headers)"))
+    parser.add_argument('--bitmap-size', metavar='<n>', help="size of feedback bitmap (must be power of 2)")
+    parser.add_argument('--trace', required=False, action='store_true', help='store binary PT traces of new inputs (fast).')
+    parser.add_argument("--trace-cb", required=False, action='store_true', help='store decoded PT traces of new inputs (slow).')
 
 
 # kafl_debug launch options
