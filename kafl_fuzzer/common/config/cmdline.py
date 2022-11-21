@@ -147,11 +147,11 @@ class ConfigParserBuilder():
         subcommands = parser.add_subparsers()
         # add subcommands
         self._add_fuzz_subcommand(subcommands)
-        # self._add_debug_subcommand(subcommands)
-        # self._add_cov_subcommand(subcommands)
-        # self._add_gui_subcommand(subcommands)
-        # self._add_plot_subcommand(subcommands)
-        # self._add_mcat_subcommand(subcommands)
+        self._add_debug_subcommand(subcommands)
+        self._add_cov_subcommand(subcommands)
+        self._add_gui_subcommand(subcommands)
+        self._add_plot_subcommand(subcommands)
+        self._add_mcat_subcommand(subcommands)
         return parser
 
     def _base_parser(self):
