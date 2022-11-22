@@ -17,6 +17,16 @@ from kafl_fuzzer.gui import start as gui_start
 from kafl_fuzzer.plot import start as plot_start
 from kafl_fuzzer.mcat import start as mcat_start
 
+DEBUG_MODES_HELP = '<benchmark>\tperform performance benchmark\n' \
+                    '<gdb>\t\trun payload with Qemu gdbserver (must compile without redqueen!)\n' \
+                    '<trace>\t\tperform trace run\n' \
+                    '<trace-qemu>\tperform trace run and print QEMU stdout\n' \
+                    '<noise>\t\tperform run and messure nondeterminism\n' \
+                    '<printk>\t\tredirect printk calls to kAFL\n' \
+                    '<redqueen>\trun redqueen debugger\n' \
+                    '<redqueen-qemu>\trun redqueen debugger and print QEMU stdout\n' \
+                    '<verify>\t\trun verifcation steps\n'
+
 class KaflSubcommands(Enum):
     FUZZ = auto()
     DEBUG = auto()
@@ -120,28 +130,10 @@ def add_args_qemu(parser):
 
 # kafl_debug launch options
 def add_args_debug(parser):
-
-    debug_modes = ["benchmark", "gdb", "trace", "single", "trace-qemu", "noise", "printk", "redqueen",
-                   "redqueen-qemu", "verify"]
-    
-    debug_modes_help = '<benchmark>\tperform performance benchmark\n' \
-                       '<gdb>\t\trun payload with Qemu gdbserver (must compile without redqueen!)\n' \
-                       '<trace>\t\tperform trace run\n' \
-                       '<trace-qemu>\tperform trace run and print QEMU stdout\n' \
-                       '<noise>\t\tperform run and messure nondeterminism\n' \
-                       '<printk>\t\tredirect printk calls to kAFL\n' \
-                       '<redqueen>\trun redqueen debugger\n' \
-                       '<redqueen-qemu>\trun redqueen debugger and print QEMU stdout\n' \
-                       '<verify>\t\trun verifcation steps\n'
-    
-    parser.add_argument('--input', metavar='<file/dir>', action=ExpandVars, type=str,
-                        help='path to input file or workdir.')
-    parser.add_argument('-n', '--iterations', metavar='<n>', help='execute <n> times (for some actions)',
-                        default=5, type=int)
-    parser.add_argument('--action', required=False, metavar='<cmd>', choices=debug_modes,
-                        help=debug_modes_help)
-    parser.add_argument('--ptdump-path', metavar='<file>', action=ExpandVars, help=hidden('path to ptdump executable'),
-                        type=parse_is_file, required=True, default=None)
+    parser.add_argument('--input', metavar='<file/dir>', help='path to input file or workdir.')
+    parser.add_argument('-n', '--iterations', metavar='<n>', help='execute <n> times (for some actions)')
+    parser.add_argument('--action', required=False, metavar='<cmd>', help=DEBUG_MODES_HELP)
+    parser.add_argument('--ptdump-path', required=False, metavar='<file>', help=hidden('path to ptdump executable'))
 
 
 class ConfigParserBuilder():

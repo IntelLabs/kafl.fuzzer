@@ -25,6 +25,10 @@ DEFAULT_RELOAD = 1
 DEFAULT_TIMEOUT_HARD = 4
 DEFAULT_PAYLOAD_SIZE = 131072
 DEFAULT_BITMAP_SIZE = 65536
+DEFAULT_ITERATIONS = 5
+
+VALID_DEBUG_ACTIONS = ["benchmark", "gdb", "trace", "single", "trace-qemu", "noise", "printk", "redqueen",
+                   "redqueen-qemu", "verify"]
 
 def app_settings_files() -> List[str]:
     settings_files = [
@@ -140,6 +144,11 @@ settings.validators.register(
     Validator("bitmap_size", default=DEFAULT_PAYLOAD_SIZE, cast=int),
     Validator("trace", default=False, cast=bool),
     Validator("trace_cb", default=False, cast=bool),
+    # debug
+    Validator("input", condition=lambda x: Path(x).exists()),
+    Validator("iterations", default=DEFAULT_ITERATIONS, cast=int),
+    Validator("action", is_in=VALID_DEBUG_ACTIONS),
+    Validator("ptdump_path", condition=is_file)
 )
 
 def update_from_namespace(namespace: Namespace):
