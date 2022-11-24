@@ -13,20 +13,6 @@ CUR_DIR = Path(__file__).parent
 APPNAME = 'kAFL'
 SETTINGS_FILENAME = "settings.yaml"
 
-# default values for Validators
-DEFAULT_PROCESSES = 1
-DEFAULT_CPU_OFFSET = 0
-DEFAULT_TIMEOUT_SOFT = 1/1000
-DEFAULT_KICKSTART = 256
-DEFAULT_AFL_ARTIH_MAX = 34
-DEFAULT_QEMU_MEMORY = 256
-DEFAULT_QEMU_CONFIG_BASE = '-enable-kvm -machine kAFL64-v1 -cpu kAFL64-Hypervisor-v1,+vmx -no-reboot -net none -display none'
-DEFAULT_RELOAD = 1
-DEFAULT_TIMEOUT_HARD = 4
-DEFAULT_PAYLOAD_SIZE = 131072
-DEFAULT_BITMAP_SIZE = 65536
-DEFAULT_ITERATIONS = 5
-
 VALID_DEBUG_ACTIONS = ["benchmark", "gdb", "trace", "single", "trace-qemu", "noise", "printk", "redqueen",
                    "redqueen-qemu", "verify"]
 
@@ -100,7 +86,7 @@ settings.validators.register(
     Validator("work_dir", must_exist=True),
     Validator("purge", default=False, cast=bool),
     Validator("resume", default=False, cast=bool),
-    Validator("processes", default=DEFAULT_PROCESSES, cast=int),
+    Validator("processes", cast=int),
     Validator("verbose", default=False, cast=bool),
     Validator("quiet", default=False, cast=bool),
     Validator("log", default=False, cast=bool),
@@ -112,18 +98,18 @@ settings.validators.register(
     Validator("afl_dump_mode", default=False, cast=bool),
     Validator("afl_skip_zero", default=False, cast=bool),
     # Validator("afl-skip-range", default=None),
-    Validator("afl_arith_max", default=DEFAULT_AFL_ARTIH_MAX, cast=int),
+    Validator("afl_arith_max", cast=int),
     Validator("radamsa", default=False, cast=bool),
     Validator("redqueen", default=False, cast=bool),
     Validator("redqueen_hashes", default=False, cast=bool),
     Validator("redqueen_hammer", default=False, cast=bool),
     Validator("redqueen_simple", default=False, cast=bool),
-    Validator("cpu_offset", default=DEFAULT_CPU_OFFSET, cast=int),
+    Validator("cpu_offset", cast=int),
     Validator("abort_time", default=None),
     Validator("abort_exec", default=None),
-    Validator("timeout_soft", default=DEFAULT_TIMEOUT_SOFT, cast=float),
+    Validator("timeout_soft", cast=float),
     Validator("timeout_check", default=False, cast=bool),
-    Validator("kickstart", default=DEFAULT_KICKSTART, cast=int),
+    Validator("kickstart", cast=int),
     Validator("radamsa_path", default=None, cast=cast_expand_path),
     # qemu
     Validator("qemu_image", default=None, cast=cast_expand_path),
@@ -132,8 +118,8 @@ settings.validators.register(
     Validator("qemu_kernel", default=None, cast=cast_expand_path),
     Validator("qemu_initrd", default=None, cast=cast_expand_path),
     Validator("qemu_append", default=None),
-    Validator("qemu_memory", default=DEFAULT_QEMU_MEMORY, cast=int),
-    Validator("qemu_base", default=DEFAULT_QEMU_CONFIG_BASE),
+    Validator("qemu_memory", cast=int),
+    Validator("qemu_base"),
     Validator("qemu_serial", default=None),
     Validator("qemu_extra", default=None),
     Validator("qemu_path", cast=cast_expand_path),
@@ -142,18 +128,18 @@ settings.validators.register(
     Validator("ip2", default=None, cast=cast_ip_range_to_list),
     Validator("ip3", default=None, cast=cast_ip_range_to_list),
     Validator("sharedir", default=None, cast=cast_expand_path),
-    Validator("reload", default=DEFAULT_RELOAD, cast=int),
+    Validator("reload", cast=int),
     Validator("gdbserver", default=False, cast=bool),
     Validator("log_hprintf", default=False, cast=bool),
     Validator("log_crashes", default=False, cast=bool),
-    Validator("timeout_hard", default=DEFAULT_TIMEOUT_HARD, cast=float),
-    Validator("payload_size", default=DEFAULT_PAYLOAD_SIZE, cast=int),
-    Validator("bitmap_size", default=DEFAULT_PAYLOAD_SIZE, cast=int),
+    Validator("timeout_hard", cast=float),
+    Validator("payload_size", cast=int),
+    Validator("bitmap_size", cast=int),
     Validator("trace", default=False, cast=bool),
     Validator("trace_cb", default=False, cast=bool),
     # debug
     Validator("input", default=None, cast=cast_expand_path),
-    Validator("iterations", default=DEFAULT_ITERATIONS, cast=int),
+    Validator("iterations", cast=int),
     Validator("action", is_in=VALID_DEBUG_ACTIONS),
     Validator("ptdump_path", default=None, cast=cast_expand_path)
 )
