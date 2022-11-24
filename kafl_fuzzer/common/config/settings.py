@@ -163,3 +163,19 @@ def update_from_namespace(namespace: Namespace):
         del dict_namespace['func']
     # update dynaconf settings
     settings.update(dict_namespace)
+
+
+def validate():
+    """Validate Dynaconf configuration.
+    
+    the settings.validators.validate() function cannot be relied upon because of a bug in Dynaconf."""
+    global settings
+    settings.validators.validate()
+    # workaround Dynaconf bug
+    # https://github.com/dynaconf/dynaconf/issues/834
+    for validator in settings.validators:
+        cast_func = validator.cast
+        try:
+            settings[validator.names[0]] = cast_func(settings[validator.names[0]])
+        except KeyError:
+            pass
