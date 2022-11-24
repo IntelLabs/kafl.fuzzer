@@ -4,8 +4,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # This module defines the command line interface for kafl, with its subcommands and parameters
-# An important point to mention is that the add_argument() calls shouldn't define default values
-# or validation functions, as this has been delegated to Dynaconf in settings.py
+# An important point to mention is that the add_argument() calls shouldn't define
+# - default values
+# - validation functions
+# as this has been delegated to Dynaconf in settings.py
 #
 # the flow can be define as the following:
 # the command line will be parsed as a Namespace object via parser.parse_args()
@@ -56,8 +58,6 @@ def hidden(msg, unmask=False):
 
 # General startup options used by fuzzer, qemu, and/or utilities
 def add_args_general(parser):
-    parser.add_argument('-h', '--help', action='help',
-                        help='show this help message and exit')
     parser.add_argument('-w', '--work-dir', metavar='<dir>', required=True, help='path to the output/working directory.')
     parser.add_argument('--purge', required=False, help='purge the working directory at startup.',
                         action='store_true', default=False)
@@ -150,9 +150,6 @@ class ConfigParserBuilder():
 
     def __call__(self, *args: Any, **kwds: Any) -> ArgumentParser:
         parser = self._base_parser()
-        # add General args
-        general_grp = parser.add_argument_group('General options')
-        add_args_general(general_grp)
         # enable subcommands
         subcommands = parser.add_subparsers()
         # add subcommands
@@ -171,6 +168,9 @@ class ConfigParserBuilder():
     def _add_fuzz_subcommand(self, parser: _SubParsersAction):
         fuzz_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.FUZZ.name.lower(), help="kAFL Fuzzer")
 
+        general_grp = fuzz_subcommand.add_argument_group('General options')
+        add_args_general(general_grp)
+
         fuzzer_grp = fuzz_subcommand.add_argument_group('Fuzzer options')
         add_args_fuzzer(fuzzer_grp)
 
@@ -181,6 +181,9 @@ class ConfigParserBuilder():
 
     def _add_debug_subcommand(self, parser: _SubParsersAction):
         debug_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.DEBUG.name.lower(), help="kAFL Debugger")
+
+        general_grp = debug_subcommand.add_argument_group('General options')
+        add_args_general(general_grp)
 
         debug_grp = debug_subcommand.add_argument_group("Debug options")
         add_args_debug(debug_grp)
@@ -193,6 +196,9 @@ class ConfigParserBuilder():
     def _add_cov_subcommand(self, parser: _SubParsersAction):
         cov_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.COV.name.lower(), help="kAFL Coverage Analyzer")
 
+        general_grp = cov_subcommand.add_argument_group('General options')
+        add_args_general(general_grp)
+
         debug_grp = cov_subcommand.add_argument_group("Debug options")
         add_args_debug(debug_grp)
 
@@ -204,14 +210,23 @@ class ConfigParserBuilder():
     def _add_gui_subcommand(self, parser: _SubParsersAction):
         gui_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.GUI.name.lower(), help="kAFL GUI")
 
+        general_grp = gui_subcommand.add_argument_group('General options')
+        add_args_general(general_grp)
+
         gui_subcommand.set_defaults(func=gui_start)
 
     def _add_plot_subcommand(self, parser: _SubParsersAction):
         plot_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.PLOT.name.lower(), help="kAFL Plotter")
 
+        general_grp = plot_subcommand.add_argument_group('General options')
+        add_args_general(general_grp)
+
         plot_subcommand.set_defaults(func=plot_start)
 
     def _add_mcat_subcommand(self, parser: _SubParsersAction):
         mcat_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.MCAT.name.lower(), help="kAFL msgpack Pretty-Printer")
+
+        general_grp = mcat_subcommand.add_argument_group('General options')
+        add_args_general(general_grp)
 
         mcat_subcommand.set_defaults(func=mcat_start)
