@@ -416,7 +416,7 @@ class qemu:
             sys.exit(0)
 
         # for -R > 1, count and toggle reload_mode at runtime
-        if self.config.reload > 1:
+        if self.config['reload'] > 1:
             self.persistent_runs += 1
             if self.persistent_runs == 1:
                 self.qemu_aux_buffer.set_reload_mode(False)
