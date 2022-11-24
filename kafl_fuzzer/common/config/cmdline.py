@@ -3,6 +3,16 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# This module defines the command line interface for kafl, with its subcommands and parameters
+# An important point to mention is that the add_argument() calls shouldn't define default values
+# or validation functions, as this has been delegated to Dynaconf in settings.py
+#
+# the flow can be define as the following:
+# the command line will be parsed as a Namespace object via parser.parse_args()
+# this Namespace object will be send to settings.py:update_from_namespace() to update the dynaconf settings
+# finally a validation step now occurs to ensure the settings are coherent and casted into the expected values
+# through settings.py:validate()
+
 import argparse
 import os
 import logging
