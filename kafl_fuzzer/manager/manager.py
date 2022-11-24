@@ -55,7 +55,7 @@ class ManagerTask:
 
         logger.debug("Starting (pid: %d)" % os.getpid())
         with open(self.config.work_dir + "/config", 'wb') as fd:
-            fd.write(msgpack.packb(vars(self.config)))
+            fd.write(msgpack.packb(self.config.to_dict()))
 
 
     def send_next_task(self, conn):
