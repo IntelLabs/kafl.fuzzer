@@ -7,7 +7,7 @@ from argparse import Namespace
 from appdirs import AppDirs
 from dynaconf import Dynaconf, Validator
 
-from typing import List
+from typing import List, Optional, Any
 
 CUR_DIR = Path(__file__).parent
 APPNAME = 'kAFL'
@@ -55,12 +55,6 @@ settings = Dynaconf(
 )
 
 # validator condition funcs
-def is_dir(value) -> bool:
-    return Path(value).is_dir()
-
-def is_file(value) -> bool:
-    return Path(value).is_file()
-
 # TODO: should be used to validate --afl-skip-range
 # def parse_ignore_range(string: str) -> bool:
 #     m = re.match(r"(\d+)(?:-(\d+))?$", string)
@@ -75,8 +69,10 @@ def is_file(value) -> bool:
 #         raise argparse.ArgumentTypeError("Invalid range specified.")
 #     return list([start, end])
 
-def cast_ip_range_to_list(parameter: str) -> List[int]:
+def cast_ip_range_to_list(parameter: Any) -> Optional[List[int]]:
     """Checks that a given IP range string is valid and returns a List of that range"""
+    if parameter is None:
+        return None
     m = re.match(r"([(0-9abcdef]{1,16})(?:-([0-9abcdef]{1,16}))?$", parameter.replace("0x", "").lower())
     if not m:
         raise ValueError(f"{parameter}: invalid range specified: not a number")
@@ -87,10 +83,21 @@ def cast_ip_range_to_list(parameter: str) -> List[int]:
         raise ValueError(f"{parameter}: invalid range specified: start > end")
     return [start, end]
 
+def cast_expand_path(parameter: Any) -> Optional[str]:
+    if parameter is None:
+        return None
+    exp_str = os.path.expandvars(parameter)
+    # ensure exists
+    p = Path(exp_str)
+    if not p.exists():
+        raise FileNotFoundError(f"Path {p} doesn't exist")
+    # return string and not PosixPath, since this object is not serializable
+    return str(p)
+
 # register validators
 settings.validators.register(
     # general
-    Validator("work_dir", must_exist=True, cast=Path),
+    Validator("work_dir", must_exist=True),
     Validator("purge", default=False, cast=bool),
     Validator("resume", default=False, cast=bool),
     Validator("processes", default=DEFAULT_PROCESSES, cast=int),
@@ -99,8 +106,8 @@ settings.validators.register(
     Validator("log", default=False, cast=bool),
     Validator("debug", default=False, cast=bool),
     # fuzz
-    Validator("seed_dir", default=None, condition=is_dir),
-    Validator("dict", default=None, condition=is_file),
+    Validator("seed_dir", default=None, cast=cast_expand_path),
+    Validator("dict", default=None, cast=cast_expand_path),
     Validator("funky", default=False, cast=bool),
     Validator("afl_dump_mode", default=False, cast=bool),
     Validator("afl_skip_zero", default=False, cast=bool),
@@ -117,24 +124,24 @@ settings.validators.register(
     Validator("timeout_soft", default=DEFAULT_TIMEOUT_SOFT, cast=float),
     Validator("timeout_check", default=False, cast=bool),
     Validator("kickstart", default=DEFAULT_KICKSTART, cast=int),
-    Validator("radamsa_path", default=None, condition=is_file),
+    Validator("radamsa_path", default=None, cast=cast_expand_path),
     # qemu
-    Validator("qemu_image", default=None, condition=is_file),
-    Validator("qemu_snapshot", default=None, condition=is_dir),
-    Validator("qemu_bios", default=None, condition=is_file),
-    Validator("qemu_kernel", default=None, condition=is_file),
-    Validator("qemu_initrd", default=None, condition=is_file),
+    Validator("qemu_image", default=None, cast=cast_expand_path),
+    Validator("qemu_snapshot", default=None, cast=cast_expand_path),
+    Validator("qemu_bios", default=None, cast=cast_expand_path),
+    Validator("qemu_kernel", default=None, cast=cast_expand_path),
+    Validator("qemu_initrd", default=None, cast=cast_expand_path),
     Validator("qemu_append", default=None),
     Validator("qemu_memory", default=DEFAULT_QEMU_MEMORY, cast=int),
     Validator("qemu_base", default=DEFAULT_QEMU_CONFIG_BASE),
     Validator("qemu_serial", default=None),
     Validator("qemu_extra", default=None),
-    Validator("qemu_path", condition=is_file),
+    Validator("qemu_path", cast=cast_expand_path),
     Validator("ip0", default=None, cast=cast_ip_range_to_list),
     Validator("ip1", default=None, cast=cast_ip_range_to_list),
     Validator("ip2", default=None, cast=cast_ip_range_to_list),
     Validator("ip3", default=None, cast=cast_ip_range_to_list),
-    Validator("sharedir", default=None, condition=is_dir),
+    Validator("sharedir", default=None, cast=cast_expand_path),
     Validator("reload", default=DEFAULT_RELOAD, cast=int),
     Validator("gdbserver", default=False, cast=bool),
     Validator("log_hprintf", default=False, cast=bool),
@@ -145,10 +152,10 @@ settings.validators.register(
     Validator("trace", default=False, cast=bool),
     Validator("trace_cb", default=False, cast=bool),
     # debug
-    Validator("input", condition=lambda x: Path(x).exists()),
+    Validator("input", default=None, cast=cast_expand_path),
     Validator("iterations", default=DEFAULT_ITERATIONS, cast=int),
     Validator("action", is_in=VALID_DEBUG_ACTIONS),
-    Validator("ptdump_path", condition=is_file)
+    Validator("ptdump_path", default=None, cast=cast_expand_path)
 )
 
 def update_from_namespace(namespace: Namespace):
