@@ -5,7 +5,7 @@ from pathlib import Path
 from argparse import Namespace
 
 from appdirs import AppDirs
-from dynaconf import Dynaconf, Validator
+from dynaconf import Dynaconf, Validator, ValidationError
 
 from typing import List, Optional, Any
 
@@ -28,10 +28,12 @@ def app_settings_files() -> List[str]:
         "kafl.yaml",
     ]
     # env var KAFL_CONFIG_FILE if present
-    try:
-        settings_files.append(os.environ['KAFL_CONFIG_FILE'])
-    except KeyError:
-        pass
+    env_config_file = os.environ.get('KAFL_CONFIG_FILE', None)
+    if env_config_file is not None:
+        # check if file exists and raise an error if not to warn user
+        if not Path(env_config_file).is_file():
+            raise ValidationError(f"KAFL_CONFIG_FILE: {env_config_file} not found")
+        settings_files.append(env_config_file)
     return settings_files
 
 appdirs = AppDirs(APPNAME)
