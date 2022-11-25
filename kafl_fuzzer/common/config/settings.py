@@ -141,7 +141,9 @@ settings.validators.register(
     Validator("input", default=None, cast=cast_expand_path),
     Validator("iterations", cast=int),
     Validator("action", is_in=VALID_DEBUG_ACTIONS),
-    Validator("ptdump_path", default=None, cast=cast_expand_path)
+    Validator("ptdump_path", default=None, cast=cast_expand_path),
+    # plot
+    Validator("outfile")
 )
 
 def update_from_namespace(namespace: Namespace):

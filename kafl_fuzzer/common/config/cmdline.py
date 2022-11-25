@@ -221,6 +221,8 @@ class ConfigParserBuilder():
         general_grp = plot_subcommand.add_argument_group('General options')
         add_args_general(general_grp)
 
+        plot_subcommand.add_argument("outfile", metavar="<outfile>", help="Output file for kAFL Plotter")
+
         plot_subcommand.set_defaults(func=plot_start)
 
     def _add_mcat_subcommand(self, parser: _SubParsersAction):
