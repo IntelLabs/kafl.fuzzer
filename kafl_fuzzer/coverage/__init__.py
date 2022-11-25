@@ -25,6 +25,7 @@ import subprocess
 import tempfile
 import logging
 from operator import itemgetter
+from dynaconf import LazySettings
 
 import msgpack
 import lz4.frame as lz4
@@ -470,7 +471,7 @@ def funky_trace_run(q, input_path, retry=1):
 
     return None
 
-def start(args):
+def start(settings: LazySettings):
     global null_hash
 
     print_banner("kAFL Coverage Analyzer")
@@ -478,14 +479,14 @@ def start(args):
     if not self_check():
         return -1
 
-    if not post_self_check(args):
+    if not post_self_check(settings):
         return -1
 
-    data_dir = args.input
+    data_dir = settings.input
 
-    null_hash = ExecutionResult.get_null_hash(args.bitmap_size)
+    null_hash = ExecutionResult.get_null_hash(settings.bitmap_size)
 
-    nproc = min(args.processes, os.cpu_count())
+    nproc = min(settings.processes, os.cpu_count())
     logger.info("Using %d/%d cores..." % (nproc, os.cpu_count()))
 
     logger.info("Scanning target data_dir »%s«..." % data_dir)
@@ -493,7 +494,7 @@ def start(args):
 
     start = time.time()
     logger.info("Generating traces...")
-    trace_dir = generate_traces(args, nproc, input_list)
+    trace_dir = generate_traces(settings, nproc, input_list)
     end = time.time()
     logger.info("\n\nDone. Time taken: %.2fs\n" % (end - start))
 

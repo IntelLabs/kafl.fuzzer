@@ -16,7 +16,7 @@ import string
 import sys
 import time
 from threading import Thread, Lock
-from argparse import Namespace
+from dynaconf import LazySettings
 
 import inotify.adapters
 import msgpack
@@ -807,11 +807,11 @@ def main(stdscr):
     gui.loop()
 
 
-def start(args: Namespace):
+def start(settings: LazySettings):
 
     locale.setlocale(locale.LC_ALL, '')
 
-    if not args.work_dir:
+    if not settings.work_dir:
         print("Usage:\n\t kafl gui <kafl-workdir>\n")
         sys.exit(1)
 

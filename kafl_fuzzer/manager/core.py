@@ -20,6 +20,8 @@ import sys
 import logging
 from pprint import pformat
 
+from dynaconf import LazySettings
+
 from kafl_fuzzer.common.util import print_banner
 from kafl_fuzzer.common.self_check import self_check, post_self_check
 from kafl_fuzzer.common.util import prepare_working_dir, copy_seed_files, qemu_sweep, filter_available_cpus
@@ -45,30 +47,30 @@ def graceful_exit(workers):
                 workers.remove(s)
 
 
-def start(config):
+def start(settings: LazySettings):
 
     print_banner("kAFL Fuzzer")
 
     if not self_check():
         return 1
 
-    work_dir   = config.work_dir
-    seed_dir   = config.seed_dir
-    num_worker = config.processes
+    work_dir   = settings.work_dir
+    seed_dir   = settings.seed_dir
+    num_worker = settings.processes
 
-    if not post_self_check(config):
+    if not post_self_check(settings):
         logger.error("Startup checks failed. Exit.")
         return -1
 
-    if not prepare_working_dir(config):
+    if not prepare_working_dir(settings):
         logger.error("Failed to prepare working directory. Exit.")
         return -1;
 
     # initialize logger after work_dir purge
     # otherwise the file handler created is removed
-    setup_logging(config)
+    setup_logging(settings)
     # log config parameters
-    logging.debug(pformat(config))
+    logging.debug(pformat(settings))
 
     if seed_dir:
         if not copy_seed_files(work_dir, seed_dir):
@@ -79,7 +81,7 @@ def start(config):
         time.sleep(1)
 
     # Without -ip0, Qemu will not active PT tracing and we turn into a blind fuzzer
-    if not config.ip0:
+    if not settings.ip0:
         logger.warn("No PT trace region defined.")
 
     avail, used = filter_available_cpus()
@@ -92,14 +94,14 @@ def start(config):
     if num_worker + 1 >= len(avail-used):
         logger.warn(f"Warning: Requested {num_worker} workers but {len(used)} out of {len(avail)} vCPUs seem busy?")
         time.sleep(2)
-    elif not config.cpu_offset:
+    elif not settings.cpu_offset:
         os.sched_setaffinity(0, avail-used)
 
-    manager = ManagerTask(config)
+    manager = ManagerTask(settings)
 
     workers = []
     for i in range(num_worker):
-        workers.append(multiprocessing.Process(name="Worker " + str(i), target=worker_loader, args=(i,config)))
+        workers.append(multiprocessing.Process(name="Worker " + str(i), target=worker_loader, args=(i,settings)))
         workers[i].start()
 
     try:
