@@ -373,7 +373,6 @@ class qemu:
             with open(self.hprintf_logfile, "a") as f:
                 f.write(msg)
 
-        self.run_qemu()
         raise QemuIOException(msg)
 
     # Fully stop/start Qemu instance to store logs + possibly recover
