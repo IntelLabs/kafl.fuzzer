@@ -220,10 +220,8 @@ class ConfigParserBuilder():
     def _add_plot_subcommand(self, parser: _SubParsersAction):
         plot_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.PLOT.name.lower(), help="kAFL Plotter")
 
-        general_grp = plot_subcommand.add_argument_group('General options')
-        add_args_general(general_grp)
-
-        plot_subcommand.add_argument("outfile", metavar="<outfile>", help="Output file for kAFL Plotter")
+        add_workdir_argument(plot_subcommand)
+        plot_subcommand.add_argument("--outfile", metavar="<outfile>", help="Output file for kAFL Plotter")
 
         plot_subcommand.set_defaults(func=plot_start)
 
