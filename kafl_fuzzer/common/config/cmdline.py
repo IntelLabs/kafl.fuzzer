@@ -228,7 +228,6 @@ class ConfigParserBuilder():
     def _add_mcat_subcommand(self, parser: _SubParsersAction):
         mcat_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.MCAT.name.lower(), help="kAFL msgpack Pretty-Printer")
 
-        general_grp = mcat_subcommand.add_argument_group('General options')
-        add_args_general(general_grp)
+        mcat_subcommand.add_argument("pack_file", nargs="+", metavar="<msgpack file>", help="MessagePack file to decode")
 
         mcat_subcommand.set_defaults(func=mcat_start)

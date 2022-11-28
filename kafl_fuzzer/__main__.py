@@ -16,4 +16,3 @@ def main():
     validate()
     # call subcommand assigned default start func
     args.func(settings)
-
