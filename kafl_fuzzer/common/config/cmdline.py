@@ -151,7 +151,7 @@ class ConfigParserBuilder():
     def __call__(self, *args: Any, **kwds: Any) -> ArgumentParser:
         parser = self._base_parser()
         # enable subcommands
-        subcommands = parser.add_subparsers()
+        subcommands = parser.add_subparsers(dest="command", required=True)
         # add subcommands
         self._add_fuzz_subcommand(subcommands)
         self._add_debug_subcommand(subcommands)
@@ -162,8 +162,7 @@ class ConfigParserBuilder():
         return parser
 
     def _base_parser(self):
-        short_usage = '%(prog)s --work-dir <dir> [fuzzer options] [qemu options]'
-        return argparse.ArgumentParser(usage=short_usage, add_help=False, fromfile_prefix_chars='@')
+        return argparse.ArgumentParser(fromfile_prefix_chars='@')
 
     def _add_fuzz_subcommand(self, parser: _SubParsersAction):
         fuzz_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.FUZZ.name.lower(), help="kAFL Fuzzer")
