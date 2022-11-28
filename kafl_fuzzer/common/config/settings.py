@@ -5,8 +5,7 @@ from pathlib import Path
 from argparse import Namespace
 
 from appdirs import AppDirs
-from dynaconf import Dynaconf, Validator, ValidationError
-from dynaconf import loaders
+from dynaconf import Dynaconf, Validator, ValidationError, loaders, LazySettings
 from dynaconf.utils.boxing import DynaBox
 
 from typing import List, Optional, Any
@@ -191,3 +190,9 @@ def dump_config():
     config = settings.to_dict()
     # dump to a file, format is infered by file extension
     loaders.write(settings.workdir_config, DynaBox(config).to_dict())
+
+def load_config() -> LazySettings:
+    """Load an additional configuration file with Dynaconf and returns the settings object"""
+    global settings
+    settings.load_file(settings.workdir_config)
+    return settings

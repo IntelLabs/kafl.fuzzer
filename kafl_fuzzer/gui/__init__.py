@@ -21,6 +21,7 @@ import inotify.adapters
 import msgpack
 import psutil
 
+from kafl_fuzzer.common.config import load_config
 from kafl_fuzzer.common.util import read_binary_file
 from kafl_fuzzer.common.config import settings
 
@@ -453,12 +454,10 @@ class GuiData:
         self.stats = self.read_file("stats")
 
         try:
-            self.config = self.read_file("config")
-            if not self.config:
-                raise FileNotFoundError("$workdir/config")
+            self.config = load_config()
             self.bitmap_size = self.config['bitmap_size']
         except (FileNotFoundError, KeyError):
-            print("Could not find bitmap size in $workdir/config - using default value..")
+            print(f"Could not find bitmap size in {self.config.workdir_config} - using default value..")
             time.sleep(1)
             self.bitmap_size = 64*1024
 
