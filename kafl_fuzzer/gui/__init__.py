@@ -13,7 +13,6 @@ import curses
 import glob
 import locale
 import string
-import sys
 import time
 from threading import Thread, Lock
 from dynaconf import LazySettings
@@ -23,6 +22,7 @@ import msgpack
 import psutil
 
 from kafl_fuzzer.common.util import read_binary_file
+from kafl_fuzzer.common.config import settings
 
 class Interface:
     def __init__(self, stdscr):
@@ -803,17 +803,13 @@ class GuiData:
 
 
 def main(stdscr):
-    gui = GuiDrawer(sys.argv[1], stdscr)
+    gui = GuiDrawer(settings.work_dir, stdscr)
     gui.loop()
 
 
-def start(settings: LazySettings):
+def start(_settings: LazySettings):
 
     locale.setlocale(locale.LC_ALL, '')
-
-    if not settings.work_dir:
-        print("Usage:\n\t kafl gui <kafl-workdir>\n")
-        sys.exit(1)
 
     try:
         curses.wrapper(main)

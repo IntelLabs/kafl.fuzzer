@@ -56,9 +56,13 @@ def hidden(msg, unmask=False):
         return msg
     return argparse.SUPPRESS
 
+def add_workdir_argument(parser):
+    """add the workdir argument to the given parser"""
+    parser.add_argument('-w', '--work-dir', metavar='<dir>', required=True, help='path to the output/working directory.')
+
 # General startup options used by fuzzer, qemu, and/or utilities
 def add_args_general(parser):
-    parser.add_argument('-w', '--work-dir', metavar='<dir>', required=True, help='path to the output/working directory.')
+    add_workdir_argument(parser)
     parser.add_argument('--purge', required=False, help='purge the working directory at startup.',
                         action='store_true', default=False)
     parser.add_argument('-r', '--resume', required=False, help='use VM snapshot from existing workdir (for cov/gdb)',
@@ -209,8 +213,7 @@ class ConfigParserBuilder():
     def _add_gui_subcommand(self, parser: _SubParsersAction):
         gui_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.GUI.name.lower(), help="kAFL GUI")
 
-        general_grp = gui_subcommand.add_argument_group('General options')
-        add_args_general(general_grp)
+        add_workdir_argument(gui_subcommand)
 
         gui_subcommand.set_defaults(func=gui_start)
 
