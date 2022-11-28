@@ -6,6 +6,8 @@ from argparse import Namespace
 
 from appdirs import AppDirs
 from dynaconf import Dynaconf, Validator, ValidationError
+from dynaconf import loaders
+from dynaconf.utils.boxing import DynaBox
 
 from typing import List, Optional, Any
 
@@ -15,6 +17,9 @@ SETTINGS_FILENAME = "settings.yaml"
 
 VALID_DEBUG_ACTIONS = ["benchmark", "gdb", "trace", "single", "trace-qemu", "noise", "printk", "redqueen",
                    "redqueen-qemu", "verify"]
+
+# default internal to kAFL
+DEFAULT_CONFIG_FILENAME = "config.yaml"
 
 def app_settings_files() -> List[str]:
     settings_files = [
@@ -145,7 +150,9 @@ settings.validators.register(
     Validator("action", is_in=VALID_DEBUG_ACTIONS),
     Validator("ptdump_path", default=None, cast=cast_expand_path),
     # plot
-    Validator("outfile")
+    Validator("outfile"),
+    # internal for kAFL
+    Validator("workdir_config", default=lambda config, _validator: str(Path(config.work_dir) / DEFAULT_CONFIG_FILENAME))
 )
 
 def update_from_namespace(namespace: Namespace):
@@ -176,3 +183,11 @@ def validate():
             settings[validator.names[0]] = cast_func(settings[validator.names[0]])
         except KeyError:
             pass
+
+def dump_config():
+    """Dump current configuration in workdir config file"""
+    global settings
+    # generate a dict with all the keys for the current environment
+    config = settings.to_dict()
+    # dump to a file, format is infered by file extension
+    loaders.write(settings.workdir_config, DynaBox(config).to_dict())
