@@ -103,7 +103,7 @@ settings.validators.register(
     Validator("funky", default=False, cast=bool),
     Validator("afl_dump_mode", default=False, cast=bool),
     Validator("afl_skip_zero", default=False, cast=bool),
-    # Validator("afl-skip-range", default=None),
+    Validator("afl_skip_range", default=None),
     Validator("afl_arith_max", cast=int),
     Validator("radamsa", default=False, cast=bool),
     Validator("redqueen", default=False, cast=bool),
