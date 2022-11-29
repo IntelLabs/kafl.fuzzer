@@ -7,17 +7,21 @@
 kAFL Fuzzer Bitmap
 """
 
+import logging
 import ctypes
 import mmap
 import os
 
 from kafl_fuzzer.native import loader as native_loader
 
+logger = logging.getLogger(__name__)
+
 class GlobalBitmap:
     bitmap_native_so = None
 
     def __init__(self, name, config, read_only=True):
         if not GlobalBitmap.bitmap_native_so:
+            logger.debug("Loading bitmap.so from %s", native_loader.bitmap_path())
             GlobalBitmap.bitmap_native_so = ctypes.CDLL(native_loader.bitmap_path())
             GlobalBitmap.bitmap_native_so.are_new_bits_present_no_apply_lut.restype = ctypes.c_uint64
             GlobalBitmap.bitmap_native_so.are_new_bits_present_do_apply_lut.restype = ctypes.c_uint64
