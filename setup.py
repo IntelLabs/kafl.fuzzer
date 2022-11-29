@@ -21,10 +21,9 @@ setup(name='kafl_fuzzer',
                     extra_compile_args=["-O3", "-fPIC", "-mtune=native"],
                     ),
           ],
-      scripts = ['kafl_fuzz.py', 'kafl_debug.py',
-          'kafl_cov.py', 'kafl_plot.py',
-          'kafl_gui.py', 'scripts/mcat.py'],
-
+      entry_points = {
+        'console_scripts': ['kafl=kafl_fuzzer.__main__:main'],
+      },
 	  classifiers=[
 		  'Development Status :: 4 - Beta',
 		  'Environment :: Console',
@@ -32,7 +31,7 @@ setup(name='kafl_fuzzer',
 		  'Intended Audience :: Science/Research',
 		  'License :: OSI Approved :: GNU Affero General Public License v3',
 		  'Operating System :: POSIX :: Linux',
-		  'Programming Language :: Python'
+		  'Programming Language :: Python',
 		  'Topic :: Security',
 		  ],
      )

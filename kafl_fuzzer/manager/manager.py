@@ -15,9 +15,9 @@ import os
 import logging
 import mmh3
 import shutil
-import msgpack
 import lz4.frame as lz4
 
+from kafl_fuzzer.common.config import dump_config
 from kafl_fuzzer.common.util import read_binary_file
 from kafl_fuzzer.manager.communicator import ServerConnection
 from kafl_fuzzer.manager.communicator import MSG_NODE_DONE, MSG_NEW_INPUT, MSG_READY, MSG_NODE_ABORT
@@ -54,9 +54,7 @@ class ManagerTask:
                 )
 
         logger.debug("Starting (pid: %d)" % os.getpid())
-        with open(self.config.work_dir + "/config", 'wb') as fd:
-            fd.write(msgpack.packb(vars(self.config)))
-
+        dump_config()
 
     def send_next_task(self, conn):
         # Inputs placed to imports/ folder have priority.

@@ -11,9 +11,12 @@ from sys import stdout
 from threading import Thread
 from pprint import pformat
 
+from dynaconf import LazySettings
+
 import kafl_fuzzer.common.color as color
+from kafl_fuzzer.common.util import print_banner
 from kafl_fuzzer.common.logger import setup_logging
-from kafl_fuzzer.common.self_check import post_self_check
+from kafl_fuzzer.common.self_check import self_check, post_self_check
 from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_sweep
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu import qemu
@@ -425,42 +428,46 @@ def verify_dbg(config, qemu_verbose=False):
     return 0
 
 
-def start(config):
+def start(settings: LazySettings):
+    print_banner("kAFL Debugger")
 
-    if not post_self_check(config):
+    if not self_check():
+        return 1
+
+    if not post_self_check(settings):
         logger.error("Startup checks failed. Exit.")
         return -1
 
-    if not prepare_working_dir(config):
+    if not prepare_working_dir(settings):
         logger.error("Failed to prepare working directory. Exit.")
         return -1;
 
     # initialize logger after work_dir purge
     # otherwise the file handler created is removed
-    setup_logging(config)
+    setup_logging(settings)
     # log config parameters
-    logging.debug(pformat(config))
+    logging.debug(pformat(settings))
 
     # Without -ip0, Qemu will not active PT tracing and Redqueen will not
     # attempt to handle debug traps. This is a requirement for modes like gdb.
-    if not config.ip0:
+    if not settings.ip0:
         logger.warn("No trace region configured! Intel PT disabled!")
 
-    max_execs = config.iterations
+    max_execs = settings.iterations
 
     try:
         # TODO: noise, benchmark, trace are working, others untested
-        mode = config.action
-        if   (mode == "noise"):         debug_non_det(config, max_execs)
-        elif (mode == "benchmark"):     benchmark(config)
-        elif (mode == "gdb"):           gdb_session(config, qemu_verbose=True)
-        elif (mode == "single"):        execute_once(config, qemu_verbose=False)
-        elif (mode == "trace"):         debug_execution(config, max_execs)
-        elif (mode == "trace-qemu"):    debug_execution(config, max_execs, qemu_verbose=True)
-        elif (mode == "printk"):        debug_execution(config, 1, qemu_verbose=True, notifiers=False)
-        elif (mode == "redqueen"):      redqueen_dbg(config, qemu_verbose=False)
-        elif (mode == "redqueen-qemu"): redqueen_dbg(config, qemu_verbose=True)
-        elif (mode == "verify"):        verify_dbg(config, qemu_verbose=True)
+        mode = settings.action
+        if   (mode == "noise"):         debug_non_det(settings, max_execs)
+        elif (mode == "benchmark"):     benchmark(settings)
+        elif (mode == "gdb"):           gdb_session(settings, qemu_verbose=True)
+        elif (mode == "single"):        execute_once(settings, qemu_verbose=False)
+        elif (mode == "trace"):         debug_execution(settings, max_execs)
+        elif (mode == "trace-qemu"):    debug_execution(settings, max_execs, qemu_verbose=True)
+        elif (mode == "printk"):        debug_execution(settings, 1, qemu_verbose=True, notifiers=False)
+        elif (mode == "redqueen"):      redqueen_dbg(settings, qemu_verbose=False)
+        elif (mode == "redqueen-qemu"): redqueen_dbg(settings, qemu_verbose=True)
+        elif (mode == "verify"):        verify_dbg(settings, qemu_verbose=True)
         else:
             logger.error("Unknown debug mode. Exit")
         logger.info("Done. Check logs for details.")

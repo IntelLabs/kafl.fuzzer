@@ -9,8 +9,7 @@
 Pretty-Print msgpack files produced by kAFL
 """
 
-import os
-import sys
+from dynaconf import LazySettings
 
 import msgpack
 from pprint import pprint
@@ -19,5 +18,7 @@ def read_binary_file(filename):
     with open(filename, 'rb') as f:
         return f.read()
 
-for arg in sys.argv[1:]:
-    pprint(msgpack.unpackb(read_binary_file(arg), strict_map_key=False))
+
+def start(settings: LazySettings):
+    for file in settings.pack_file:
+        pprint(msgpack.unpackb(read_binary_file(file), strict_map_key=False))

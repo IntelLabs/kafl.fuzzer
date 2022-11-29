@@ -12,17 +12,18 @@ Given a kAFL workdir, produce a text-based UI with status summary/overview.
 import curses
 import glob
 import locale
-import os
 import string
-import sys
 import time
 from threading import Thread, Lock
+from dynaconf import LazySettings
 
 import inotify.adapters
 import msgpack
 import psutil
 
+from kafl_fuzzer.common.config import load_config
 from kafl_fuzzer.common.util import read_binary_file
+from kafl_fuzzer.common.config import settings
 
 class Interface:
     def __init__(self, stdscr):
@@ -453,12 +454,10 @@ class GuiData:
         self.stats = self.read_file("stats")
 
         try:
-            self.config = self.read_file("config")
-            if not self.config:
-                raise FileNotFoundError("$workdir/config")
+            self.config = load_config()
             self.bitmap_size = self.config['bitmap_size']
         except (FileNotFoundError, KeyError):
-            print("Could not find bitmap size in $workdir/config - using default value..")
+            print(f"Could not find bitmap size in {self.config.workdir_config} - using default value..")
             time.sleep(1)
             self.bitmap_size = 64*1024
 
@@ -803,17 +802,13 @@ class GuiData:
 
 
 def main(stdscr):
-    gui = GuiDrawer(sys.argv[1], stdscr)
+    gui = GuiDrawer(settings.work_dir, stdscr)
     gui.loop()
 
-if __name__ == "__main__":
+
+def start(_settings: LazySettings):
 
     locale.setlocale(locale.LC_ALL, '')
-    code = locale.getpreferredencoding()
-
-    if len(sys.argv) < 2 or not os.path.exists(sys.argv[1]):
-        print("Usage:\n\t" + sys.argv[0] + " <kafl-workdir>\n")
-        sys.exit(1)
 
     try:
         curses.wrapper(main)

@@ -11,13 +11,13 @@ Optionally also visualize this output using an xdot graph.
 
 """
 
-import sys
 import time
 import glob
 import msgpack
 
 import pygraphviz as pgv
 
+from dynaconf import LazySettings
 from kafl_fuzzer.common.util import read_binary_file, strdump, print_banner
 
 class Graph:
@@ -131,13 +131,11 @@ def main(workdir, outfile=None):
     dot = Graph(workdir, outfile)
     dot.process_once()
 
-if __name__ == "__main__":
 
+def start(settings: LazySettings):
     print_banner("kAFL Plotter")
 
-    if (len(sys.argv) == 2):   main(sys.argv[1])
-    elif (len(sys.argv) == 3): main(sys.argv[1], outfile=sys.argv[2])
-    else:
-        print("Missing arguments. Usage:\n\n\t%s </path/to/workdir> [outfile.dot]\n" % sys.argv[0])
-        sys.exit()
+    work_dir = settings.work_dir
+    outfile = settings.outfile
 
+    main(work_dir, outfile)

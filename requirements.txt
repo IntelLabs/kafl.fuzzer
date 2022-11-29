@@ -11,6 +11,6 @@ pgrep
 tqdm
 six
 python-dateutil
-west
-confuse
 flatdict
+dynaconf
+appdirs
