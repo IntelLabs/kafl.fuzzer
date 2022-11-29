@@ -86,10 +86,16 @@ def cast_expand_path(parameter: Any) -> Optional[str]:
     # return string and not PosixPath, since this object is not serializable
     return str(p)
 
+def cast_expand_path_no_verify(parameter: Any) -> Optional[str]:
+    if parameter is None:
+        return None
+    exp_str = os.path.expandvars(parameter)
+    return exp_str
+
 # register validators
 settings.validators.register(
     # general
-    Validator("work_dir", must_exist=True),
+    Validator("work_dir", must_exist=True, cast=cast_expand_path_no_verify),
     Validator("purge", default=False, cast=bool),
     Validator("resume", default=False, cast=bool),
     Validator("processes", cast=int),
@@ -153,7 +159,7 @@ settings.validators.register(
     # mcat
     Validator("pack_file"),
     # internal for kAFL
-    Validator("workdir_config", default=lambda config, _validator: str(Path(config.work_dir) / DEFAULT_CONFIG_FILENAME))
+    Validator("workdir_config", default=lambda config, _validator: str(Path(config.work_dir) / DEFAULT_CONFIG_FILENAME), cast=cast_expand_path_no_verify)
 )
 
 def update_from_namespace(namespace: Namespace):

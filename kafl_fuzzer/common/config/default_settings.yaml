@@ -1,6 +1,7 @@
 # kAFL default configuration
 
 # general options
+work_dir: /dev/shm/kafl_$USER
 processes: 1
 
 # fuzz options
