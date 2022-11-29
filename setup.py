@@ -13,7 +13,7 @@ setup(name='kafl_fuzzer',
       url='https://github.com/IntelLabs/kAFL',
       install_requires=requirements,
       packages=find_packages(),
-      package_data={'kafl_fuzzer': ['logging.yaml']},
+      package_data={'kafl_fuzzer': ['logging.yaml', 'common/config/default_settings.yaml']},
       include_package_data=True,
       ext_modules = [
           Extension('kafl_fuzzer.native.bitmap',
