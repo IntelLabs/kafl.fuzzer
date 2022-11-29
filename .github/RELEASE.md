@@ -18,6 +18,7 @@
 # 🔧 Fixes
 
 - avoid Qemu hang when handling ABORT in pre-init phase (#34)
+- fix including `default_settings.yaml` in the final package (#35)
 
 # 📖 Documentation
 
