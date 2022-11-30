@@ -14,3 +14,4 @@ python-dateutil
 flatdict
 dynaconf
 appdirs
+PyYAML==6.0
