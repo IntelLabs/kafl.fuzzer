@@ -13,7 +13,8 @@
     - option `--afl-skip-ranges` has been removed (never used anyway)
     - removed config override via `$PWD/kafl.yaml` (not explicit, users don't expect that behavior)
     - rename and reformat `$WORKDIR/config` (MessagePack) -> `$WORKDIR/config.yaml` (YAML)
-
+- add early logging of fuzzer loaded configuration before validation (#38)
+    - deprecate `KAFL_CONFIG_DEBUG`
 
 # 🔧 Fixes
 

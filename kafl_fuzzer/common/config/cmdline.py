@@ -16,12 +16,12 @@
 # through settings.py:validate()
 
 import argparse
-import os
 import logging
 from enum import Enum, auto
 from argparse import _SubParsersAction, ArgumentParser
 from typing import Any
 
+from .settings import settings
 from kafl_fuzzer.manager.core import start as fuzz_start
 from kafl_fuzzer.debug.core import start as debug_start
 from kafl_fuzzer.coverage import start as cov_start
@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 
 def hidden(msg, unmask=False):
-    if unmask or 'KAFL_CONFIG_DEBUG' in os.environ:
+    if unmask or settings.debug:
         return msg
     return argparse.SUPPRESS
 

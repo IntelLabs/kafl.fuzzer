@@ -15,7 +15,7 @@ from dynaconf import LazySettings
 
 import kafl_fuzzer.common.color as color
 from kafl_fuzzer.common.util import print_banner
-from kafl_fuzzer.common.logger import setup_logging
+from kafl_fuzzer.common.logger import add_logging_file
 from kafl_fuzzer.common.self_check import self_check, post_self_check
 from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_sweep
 from kafl_fuzzer.worker.execution_result import ExecutionResult
@@ -444,7 +444,7 @@ def start(settings: LazySettings):
 
     # initialize logger after work_dir purge
     # otherwise the file handler created is removed
-    setup_logging(settings)
+    add_logging_file(settings)
     # log config parameters
     logging.debug(pformat(settings))
 

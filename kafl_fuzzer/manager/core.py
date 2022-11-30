@@ -18,14 +18,13 @@ import time
 import os
 import sys
 import logging
-from pprint import pformat
 
 from dynaconf import LazySettings
 
 from kafl_fuzzer.common.util import print_banner
 from kafl_fuzzer.common.self_check import self_check, post_self_check
 from kafl_fuzzer.common.util import prepare_working_dir, copy_seed_files, qemu_sweep, filter_available_cpus
-from kafl_fuzzer.common.logger import setup_logging
+from kafl_fuzzer.common.logger import add_logging_file
 from kafl_fuzzer.manager.manager import ManagerTask
 from kafl_fuzzer.worker.worker import worker_loader
 
@@ -68,9 +67,7 @@ def start(settings: LazySettings):
 
     # initialize logger after work_dir purge
     # otherwise the file handler created is removed
-    setup_logging(settings)
-    # log config parameters
-    logging.debug(pformat(settings))
+    add_logging_file(settings)
 
     if seed_dir:
         if not copy_seed_files(work_dir, seed_dir):
