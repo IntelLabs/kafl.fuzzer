@@ -29,7 +29,6 @@ def check_packages():
             'fastrand',
             'inotify',
             'pygraphviz',
-            'toposort',
             ]
 
     import importlib
