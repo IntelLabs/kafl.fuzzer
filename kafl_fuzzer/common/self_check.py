@@ -19,29 +19,6 @@ def check_version():
     return True
 
 
-def check_packages():
-
-    deps = [
-            'msgpack',
-            'mmh3',
-            'lz4',
-            'psutil',
-            'fastrand',
-            'inotify',
-            'pygraphviz',
-            'toposort',
-            ]
-
-    import importlib
-    for pkg in deps:
-        try:
-            importlib.import_module(pkg)
-        except (ImportError):
-            logger.error("Failed to import package %s - check dependencies!" % pkg)
-            return False
-
-    return True
-
 def vmx_pt_get_addrn(verbose=True):
 
     KVMIO = 0xAE
@@ -158,8 +135,6 @@ def check_cpu_num(config):
 
 def self_check():
     if not check_version():
-        return False
-    if not check_packages():
         return False
     if not check_vmx_pt():
         return False
