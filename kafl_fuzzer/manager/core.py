@@ -18,7 +18,6 @@ import time
 import os
 import sys
 import logging
-from pprint import pformat
 
 from dynaconf import LazySettings
 
@@ -69,8 +68,6 @@ def start(settings: LazySettings):
     # initialize logger after work_dir purge
     # otherwise the file handler created is removed
     add_logging_file(settings)
-    # log config parameters
-    logging.debug(pformat(settings))
 
     if seed_dir:
         if not copy_seed_files(work_dir, seed_dir):
