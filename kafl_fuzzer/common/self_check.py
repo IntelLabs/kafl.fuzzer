@@ -33,7 +33,6 @@ def check_packages():
             'psutil',
             'fastrand',
             'inotify',
-            'pgrep',
             'pygraphviz',
             'toposort',
             ]

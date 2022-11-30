@@ -7,7 +7,6 @@ inotify
 msgpack
 toposort
 pygraphviz
-pgrep
 tqdm
 six
 python-dateutil
