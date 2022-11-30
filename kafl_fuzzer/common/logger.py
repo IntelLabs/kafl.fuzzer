@@ -3,28 +3,32 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+from dynaconf import LazySettings
 import yaml
 import logging
 from logging import LoggerAdapter
 from pathlib import Path
 from logging.config import dictConfig
-from argparse import Namespace
 from pprint import pformat
 
 import kafl_fuzzer
 
+LOGGING_CONFIG = None
 LOGGING_CONFIG_FILE = Path(kafl_fuzzer.__file__).parent / "logging.yaml"
 DEBUG_FILENAME = 'kafl_fuzzer.log'
+
+def load_logging_config():
+    global LOGGING_CONFIG
+    with open(LOGGING_CONFIG_FILE) as f:
+        LOGGING_CONFIG = yaml.safe_load(f)
 
 class WorkerLogAdapter(LoggerAdapter):
     def process(self, msg, kwargs):
         return f'Worker-{self.extra["pid"]:02d} {msg}', kwargs
 
-def setup_logging(config: Namespace):
-    # read config file
-    with open(LOGGING_CONFIG_FILE) as f:
-        log_config = yaml.safe_load(f)
-
+def setup_basic_logging(config: LazySettings):
+    global LOGGING_CONFIG
+    assert(LOGGING_CONFIG is not None)
     # Default is INFO level to console, and no file logging.
     # Useful modifiers:
     #  -v / -q to increase/decrease console logging
@@ -40,12 +44,19 @@ def setup_logging(config: Namespace):
 
     # update logger yaml config based on command line params
     if console_level:
-        log_config['root']['level'] = console_level
+        LOGGING_CONFIG['root']['level'] = console_level
+    # configure logging
+    dictConfig(LOGGING_CONFIG)
+
+
+def add_logging_file(config: LazySettings):
+    global LOGGING_CONFIG
+    assert(LOGGING_CONFIG is not None)
     if config.log:
         # define file handler filepath
         log_filepath = Path(config.work_dir) / DEBUG_FILENAME
         # define file handler in log_config
-        log_config['handlers']['file'] = {
+        LOGGING_CONFIG['handlers']['file'] = {
             'class': 'logging.FileHandler',
             'formatter': 'default',
             'level': 'NOTSET',
@@ -53,10 +64,11 @@ def setup_logging(config: Namespace):
             'mode': 'w+'
         }
         # add file handler as output for root logger
-        log_config['root']['handlers'].append('file')
-
-    # configure logging
-    dictConfig(log_config)
+        LOGGING_CONFIG['root']['handlers'].append('file')
+        # configure logging
+        dictConfig(LOGGING_CONFIG)
     # dump final logger config
     logging.debug('Logger configuration:')
-    logging.debug(pformat(log_config))
+    logging.debug(pformat(LOGGING_CONFIG))
+
+load_logging_config()

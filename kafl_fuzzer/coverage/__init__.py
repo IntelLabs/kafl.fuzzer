@@ -33,7 +33,7 @@ from tqdm import tqdm
 from math import ceil
 
 from kafl_fuzzer.common.self_check import self_check, post_self_check
-from kafl_fuzzer.common.logger import setup_logging
+from kafl_fuzzer.common.logger import add_logging_file
 from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_sweep, print_banner
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu import qemu
@@ -324,7 +324,7 @@ def generate_traces_worker(config, pid, work_queue):
         logger.error("Failed to prepare working directory. Exit.")
         return -1;
 
-    setup_logging(config)
+    add_logging_file(config)
 
     work_dir = config.work_dir
 
