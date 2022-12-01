@@ -11,14 +11,22 @@ Optionally also visualize this output using an xdot graph.
 
 """
 
+import sys
 import time
 import glob
 import msgpack
-
-import pygraphviz as pgv
+import logging
+try:
+    import pygraphviz as pgv
+except ImportError:
+    HAS_GRAPHVIZ = False
+else:
+    HAS_GRAPHVIZ = True
 
 from dynaconf import LazySettings
 from kafl_fuzzer.common.util import read_binary_file, strdump, print_banner
+
+logger = logging.getLogger(__name__)
 
 class Graph:
 
@@ -134,6 +142,10 @@ def main(workdir, outfile=None):
 
 def start(settings: LazySettings):
     print_banner("kAFL Plotter")
+    global HAS_GRAPHVIZ
+    if not HAS_GRAPHVIZ:
+        logging.critical("Cannot import pygraphviz. This library is required by kafl plotter.")
+        sys.exit(1)
 
     work_dir = settings.work_dir
     outfile = settings.outfile
