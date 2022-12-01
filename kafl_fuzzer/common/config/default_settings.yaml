@@ -3,6 +3,8 @@
 # general options
 work_dir: /dev/shm/kafl_$USER
 debug: false
+quiet: false
+verbose: false
 processes: 1
 
 # fuzz options
