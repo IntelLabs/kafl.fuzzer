@@ -16,12 +16,6 @@ import time
 import glob
 import msgpack
 import logging
-try:
-    import pygraphviz as pgv
-except ImportError:
-    HAS_GRAPHVIZ = False
-else:
-    HAS_GRAPHVIZ = True
 
 from dynaconf import LazySettings
 from kafl_fuzzer.common.util import read_binary_file, strdump, print_banner
@@ -35,13 +29,6 @@ class Graph:
         self.workdir = workdir
         self.outfile = outfile
 
-        self.dot = pgv.AGraph(directed=True, strict=True)
-        self.dot.graph_attr['epsilon'] = '0.0008'
-        self.dot.graph_attr['defaultdist'] = '2'
-        self.dot.add_node(0, label="Start")
-        if self.outfile:
-            self.dot.write(self.outfile)
-
         self.global_startup = time.time()
         self.global_executions = 0
         self.global_runtime = 0
@@ -50,18 +37,31 @@ class Graph:
 
     def process_once(self):
 
+        if self.outfile:
+            try:
+                import pygraphviz as pgv
+            except ImportError:
+                logging.critical("Error: Graph plotting requires pygraphviz (try: `pip install pygraphviz`).")
+                sys.exit(1)
+
+            self.dot = pgv.AGraph(directed=True, strict=True)
+            self.dot.graph_attr['epsilon'] = '0.0008'
+            self.dot.graph_attr['defaultdist'] = '2'
+            self.dot.add_node(0, label="Start")
+            self.dot.write(self.outfile)
+
         try:
             for worker_stats in sorted(glob.glob(self.workdir + "/worker_stats_*")):
                 self.__process_worker(worker_stats)
             for nodefile in sorted(glob.glob(self.workdir + "/metadata/node_*")):
                 self.__process_node(nodefile)
         except:
-            print("Error processing stats at given work_dir %s. Aborting." % repr(self.workdir))
+            logger.error("Error processing stats at given work_dir %s. Aborting." % repr(self.workdir))
             raise
 
         if self.outfile:
             self.dot.write(self.outfile)
-            print("\nOutput written to %s." % self.outfile)
+            logger.info("\nOutput written to %s." % self.outfile)
 
     def flush(self):
         if self.outfile:
@@ -126,28 +126,18 @@ class Graph:
                 (t_str, node_id, parent, method[:10].ljust(10), sample[:32].ljust(32),
                     stage[:8].ljust(8), exit[:1].title(), len(favs), score, plen/1024, perf*1000, prio, t_seen))
 
-        self.dot.add_node(node["id"], label="%s\n[id=%02d, score=%2.2f]\n%s" % (sample[:12], node_id, score, exit), color=color)
-        self.dot.add_edge(parent, node["id"], headlabel=method, arrowhead='open')
+        if self.outfile:
+            self.dot.add_node(node["id"], label="%s\n[id=%02d, score=%2.2f]\n%s" % (sample[:12], node_id, score, exit), color=color)
+            self.dot.add_edge(parent, node["id"], headlabel=method, arrowhead='open')
 
         return True
-
-def main(workdir, outfile=None):
-
-    if glob.glob(workdir + "/worker_stats_*") == []:
-        print("No kAFL statistics found. Invalid workdir?")
-
-    dot = Graph(workdir, outfile)
-    dot.process_once()
 
 
 def start(settings: LazySettings):
     print_banner("kAFL Plotter")
-    global HAS_GRAPHVIZ
-    if not HAS_GRAPHVIZ:
-        logging.critical("Cannot import pygraphviz. This library is required by kafl plotter.")
-        sys.exit(1)
 
-    work_dir = settings.work_dir
-    outfile = settings.outfile
+    if glob.glob(settings.work_dir + "/worker_stats_*") == []:
+        logging.warn("No kAFL statistics found in %s. Invalid workdir?", settings.work_dir)
 
-    main(work_dir, outfile)
+    dot = Graph(settings.work_dir, settings.outfile)
+    dot.process_once()
