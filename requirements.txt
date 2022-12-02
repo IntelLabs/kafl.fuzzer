@@ -4,7 +4,6 @@ psutil
 fastrand
 inotify
 msgpack
-pygraphviz
 tqdm
 six
 dynaconf

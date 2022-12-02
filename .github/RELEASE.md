@@ -15,6 +15,7 @@
     - rename and reformat `$WORKDIR/config` (MessagePack) -> `$WORKDIR/config.yaml` (YAML)
 - add early logging of fuzzer loaded configuration before validation (#38)
     - deprecate `KAFL_CONFIG_DEBUG`
+- remove `pygraphviz` dependency (#43)
 
 # 🔧 Fixes
 
