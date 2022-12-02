@@ -158,7 +158,7 @@ settings.validators.register(
     Validator("action", is_in=VALID_DEBUG_ACTIONS),
     Validator("ptdump_path", default=None, cast=cast_expand_path),
     # plot
-    Validator("outfile", default=None),
+    Validator("dot_file", default=None),
     # mcat
     Validator("pack_file"),
     # internal for kAFL
