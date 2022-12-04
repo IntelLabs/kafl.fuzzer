@@ -1,8 +1,10 @@
 import os
+import sys
 import re
 from contextlib import suppress
 from pathlib import Path
 from argparse import Namespace
+import logging
 
 from appdirs import AppDirs
 from dynaconf import Dynaconf, Validator, ValidationError, loaders, LazySettings
@@ -178,10 +180,16 @@ def update_from_namespace(namespace: Namespace):
 
 def validate():
     """Validate Dynaconf configuration.
-    
+
     the settings.validators.validate() function cannot be relied upon because of a bug in Dynaconf."""
     global settings
-    settings.validators.validate()
+
+    logger = logging.getLogger(__name__)
+    try:
+        settings.validators.validate()
+    except ValidationError as e:
+        logger.critical("Configuration error: %s", str(e))
+        sys.exit(1)
     # workaround Dynaconf bug
     # https://github.com/dynaconf/dynaconf/issues/834
     for validator in settings.validators:
