@@ -117,8 +117,11 @@ def prepare_working_dir(config):
     try:
         for folder in folders:
             os.makedirs(workdir + folder, exist_ok=resume)
-    except:
+    except FileExistsError:
         logger.error("Refuse to operate on existing workdir, supply either --purge or --resume.")
+        return False
+    except PermissionError as e:
+        logger.error(str(e))
         return False
 
     return True
