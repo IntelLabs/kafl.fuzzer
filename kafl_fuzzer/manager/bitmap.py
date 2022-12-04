@@ -27,7 +27,7 @@ class GlobalBitmap:
             GlobalBitmap.bitmap_native_so.are_new_bits_present_do_apply_lut.restype = ctypes.c_uint64
 
         self.bitmap_size = config.bitmap_size
-        self.create_bitmap(name, config.work_dir)
+        self.create_bitmap(name, config.workdir)
         self.c_bitmap = (ctypes.c_uint8 * self.bitmap_size).from_buffer(self.bitmap)
         self.read_only = read_only
         if not read_only:
@@ -38,8 +38,8 @@ class GlobalBitmap:
         for i in range(self.bitmap_size):
             self.c_bitmap[i] = 0
 
-    def create_bitmap(self, name, work_dir):
-        self.bitmap_fd = os.open(work_dir + "/bitmaps/" + name,
+    def create_bitmap(self, name, workdir):
+        self.bitmap_fd = os.open(workdir + "/bitmaps/" + name,
                                  os.O_RDWR | os.O_SYNC | os.O_CREAT)
         os.ftruncate(self.bitmap_fd, self.bitmap_size)
         self.bitmap = mmap.mmap(self.bitmap_fd, self.bitmap_size, mmap.MAP_SHARED, mmap.PROT_WRITE | mmap.PROT_READ)

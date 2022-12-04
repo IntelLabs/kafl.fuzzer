@@ -95,7 +95,7 @@ def cast_expand_path_no_verify(parameter: Any) -> Optional[str]:
 # register validators
 settings.validators.register(
     # general
-    Validator("work_dir", must_exist=True, cast=cast_expand_path_no_verify),
+    Validator("workdir", must_exist=True, cast=cast_expand_path_no_verify),
     Validator("purge", default=False, cast=bool),
     Validator("resume", default=False, cast=bool),
     Validator("processes", cast=int),
@@ -159,7 +159,7 @@ settings.validators.register(
     # mcat
     Validator("pack_file"),
     # internal for kAFL
-    Validator("workdir_config", default=lambda config, _validator: str(Path(config.work_dir) / DEFAULT_CONFIG_FILENAME), cast=cast_expand_path_no_verify)
+    Validator("workdir_config", default=lambda config, _validator: str(Path(config.workdir) / DEFAULT_CONFIG_FILENAME), cast=cast_expand_path_no_verify)
 )
 
 def update_from_namespace(namespace: Namespace):

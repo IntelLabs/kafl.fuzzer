@@ -98,7 +98,7 @@ def find_diffs(data_a, data_b):
 
 def prepare_working_dir(config):
 
-    work_dir   = config.work_dir
+    workdir   = config.workdir
     purge      = config.purge
     resume     = config.resume
 
@@ -112,13 +112,13 @@ def prepare_working_dir(config):
         return False
 
     if purge:
-        shutil.rmtree(work_dir, ignore_errors=True)
+        shutil.rmtree(workdir, ignore_errors=True)
 
     try:
         for folder in folders:
-            os.makedirs(work_dir + folder, exist_ok=resume)
+            os.makedirs(workdir + folder, exist_ok=resume)
     except:
-        logger.error("Refuse to operate on existing work_dir, supply either --purge or --resume.")
+        logger.error("Refuse to operate on existing workdir, supply either --purge or --resume.")
         return False
 
     return True

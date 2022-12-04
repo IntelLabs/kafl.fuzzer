@@ -53,7 +53,7 @@ def start(settings: LazySettings):
     if not self_check():
         return 1
 
-    work_dir   = settings.work_dir
+    workdir   = settings.workdir
     seed_dir   = settings.seed_dir
     num_worker = settings.processes
 
@@ -65,12 +65,12 @@ def start(settings: LazySettings):
         logger.error("Failed to prepare working directory. Exit.")
         return -1;
 
-    # initialize logger after work_dir purge
+    # initialize logger after workdir purge
     # otherwise the file handler created is removed
     add_logging_file(settings)
 
     if seed_dir:
-        if not copy_seed_files(work_dir, seed_dir):
+        if not copy_seed_files(workdir, seed_dir):
             logger.error("Error when importing seeds. Exit.")
             return 1
     else:

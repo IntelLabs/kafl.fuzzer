@@ -19,7 +19,7 @@ class QueueNode:
     def __init__(self, config, payload, bitmap, node_struct, write=True):
         self.node_struct = node_struct
         self.busy = False
-        self.workdir = config.work_dir
+        self.workdir = config.workdir
 
         self.set_id(QueueNode.NextID, write=False)
         QueueNode.NextID += 1

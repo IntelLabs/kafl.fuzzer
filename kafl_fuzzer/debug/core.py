@@ -106,8 +106,8 @@ def gdb_session(config, qemu_verbose=True, notifiers=True):
 
 def store_traces(config, qid, basename, exec_hash):
     if config.trace:
-        shutil.move(config.work_dir + f"/pt_trace_dump_{qid}",
-                    config.work_dir + f"/traces/{basename}_{exec_hash}.bin")
+        shutil.move(config.workdir + f"/pt_trace_dump_{qid}",
+                    config.workdir + f"/traces/{basename}_{exec_hash}.bin")
 
 
 def execute_once(config, qemu_verbose=False, notifiers=True):
@@ -442,7 +442,7 @@ def start(settings: LazySettings):
         logger.error("Failed to prepare working directory. Exit.")
         return -1;
 
-    # initialize logger after work_dir purge
+    # initialize logger after workdir purge
     # otherwise the file handler created is removed
     add_logging_file(settings)
     # log config parameters

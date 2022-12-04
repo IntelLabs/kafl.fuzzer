@@ -26,7 +26,7 @@ class ManagerStatistics:
         self.write_thres = 0.5
         self.quiet = config.quiet
         self.num_workers = config.processes
-        self.work_dir = config.work_dir
+        self.workdir = config.workdir
         self.data = {
                 "start_time": time.time(),
                 "total_execs": 0,
@@ -53,15 +53,15 @@ class ManagerStatistics:
                 "num_workers": self.num_workers
                 }
 
-        self.stats_file = self.work_dir + "/stats"
-        self.plot_file  = self.work_dir + "/stats.csv"
+        self.stats_file = self.workdir + "/stats"
+        self.plot_file  = self.workdir + "/stats.csv"
         # write once so that we have a valid stats file
         self.write_plot_header()
         self.maybe_write_stats()
 
     def read_worker_stats(self, pid):
         # one-shot attempt to read + parse file - this can fail!
-        filename = self.work_dir + "/worker_stats_%d" % pid
+        filename = self.workdir + "/worker_stats_%d" % pid
         return msgpack.unpackb(read_binary_file(filename), strict_map_key=False)
 
     def event_queue_cycle(self, queue):
@@ -241,7 +241,7 @@ class ManagerStatistics:
 
 class WorkerStatistics:
     def __init__(self, pid, config):
-        self.filename = "%s/worker_stats_%d" % (config.work_dir, pid)
+        self.filename = "%s/worker_stats_%d" % (config.workdir, pid)
         self.write_last = 0
         self.write_thres = 0.5
         self.execs_new = 0

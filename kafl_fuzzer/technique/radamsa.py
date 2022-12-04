@@ -24,9 +24,9 @@ def init_radamsa(config, pid):
     global input_dir
     global radamsa_path
 
-    corpus_dir = config.work_dir + "/corpus/"
+    corpus_dir = config.workdir + "/corpus/"
     radamsa_path = config.radamsa_path
-    input_dir = config.work_dir + "/radamsa_%d/" % pid
+    input_dir = config.workdir + "/radamsa_%d/" % pid
 
     if not os.path.isdir(input_dir):
         os.makedirs(input_dir)

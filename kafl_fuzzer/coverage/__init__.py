@@ -147,12 +147,12 @@ class TraceParser:
         return unique_edges, unique_bbs
 
 
-def afl_workdir_iterator(work_dir):
+def afl_workdir_iterator(workdir):
     id_to_time = dict()
     input_id_time = list()
     nid = 0
     start_time = time.time()
-    with open(work_dir + "/plot_data", 'r') as f:
+    with open(workdir + "/plot_data", 'r') as f:
         afl_plot = csv.reader(f, delimiter=',')
         next(afl_plot) # skip first line
         for row in afl_plot:
@@ -166,7 +166,7 @@ def afl_workdir_iterator(work_dir):
                 nid += 1
 
     # match any identified payloads - poor man's variant of /{crashes,hangs,queue}/id*
-    for input_file in glob.glob(work_dir + "/[chq][rau][ane][sgu][hse]*/id:0*"):
+    for input_file in glob.glob(workdir + "/[chq][rau][ane][sgu][hse]*/id:0*"):
         if not input_file:
             return
         input_name = os.path.basename(input_file)
@@ -179,10 +179,10 @@ def afl_workdir_iterator(work_dir):
     return input_id_time
 
 
-def kafl_workdir_iterator(work_dir):
+def kafl_workdir_iterator(workdir):
     input_id_time = list()
     start_time = time.time()
-    for stats_file in glob.glob(work_dir + "/worker_stats_*"):
+    for stats_file in glob.glob(workdir + "/worker_stats_*"):
         if not stats_file:
             return None
         worker_stats = msgpack.unpackb(read_binary_file(stats_file), strict_map_key=False)
@@ -192,11 +192,11 @@ def kafl_workdir_iterator(work_dir):
     # TODO: Tracing crashes/timeouts has minimal overall improvement ~1-2%
     # Probably want to make this optional, and only trace a small sample
     # of non-regular payloads by default?
-    for input_file in glob.glob(work_dir + "/corpus/[rck]*/*"):
+    for input_file in glob.glob(workdir + "/corpus/[rck]*/*"):
         if not input_file:
             return None
         input_id = os.path.basename(input_file).replace("payload_", "")
-        meta_file = work_dir + "/metadata/node_{}".format(input_id)
+        meta_file = workdir + "/metadata/node_{}".format(input_id)
         metadata = msgpack.unpackb(read_binary_file(meta_file), strict_map_key=False)
 
         seconds = metadata["info"]["time"] - start_time
@@ -316,7 +316,7 @@ def generate_traces_worker(config, pid, work_queue):
         qemu_id = int(pnum) # get unique qemu ID != {0,1337}
     else:
         # spawn worker in separate workdir, booting a new VM state
-        config.work_dir += "_%s" % pname
+        config.workdir += "_%s" % pname
         config.purge = True # not needed?
         qemu_id = 1337 # debug instance
 
@@ -326,7 +326,7 @@ def generate_traces_worker(config, pid, work_queue):
 
     add_logging_file(config)
 
-    work_dir = config.work_dir
+    workdir = config.workdir
 
     signal.signal(signal.SIGTERM, sigterm_handler)
     os.setpgrp()
@@ -361,7 +361,7 @@ def generate_traces_worker(config, pid, work_queue):
             if dump_mode:
                 # -trace mode (pt dump)
                 if not os.path.exists(dump_file):
-                    qemu_file = work_dir + "/pt_trace_dump_%d" % qemu_id
+                    qemu_file = workdir + "/pt_trace_dump_%d" % qemu_id
                     if simple_trace_run(q, read_binary_file(input_path), q.send_payload):
                         with open(qemu_file, 'rb') as f_in:
                             with lz4.LZ4FrameFile(dump_file, 'wb', compression_level=lz4.COMPRESSIONLEVEL_MINHC) as f_out:
@@ -373,7 +373,7 @@ def generate_traces_worker(config, pid, work_queue):
                                 shutil.copyfileobj(pt_dump_lz4, pt_tmp)
                         pt_tmp.close()
 
-                        cmd = [ ptdump_path, work_dir + "/page_cache", pt_tmp.name, tmpfile ]
+                        cmd = [ ptdump_path, workdir + "/page_cache", pt_tmp.name, tmpfile ]
                         for i in range(2):
                             key = "ip" + str(i)
                             if getattr(config, key, None):
@@ -403,7 +403,7 @@ def generate_traces_worker(config, pid, work_queue):
             else:
                 # -trace_cb mode (libxdc callback)
                 if not os.path.exists(trace_file):
-                    qemu_file = work_dir + "/redqueen_workdir_%d/pt_trace_results.txt" % qemu_id
+                    qemu_file = workdir + "/redqueen_workdir_%d/pt_trace_results.txt" % qemu_id
                     if simple_trace_run(q, read_binary_file(input_path), q.send_payload):
                         with open(qemu_file, 'rb') as f_in:
                             with lz4.LZ4FrameFile(trace_file, 'wb', compression_level=lz4.COMPRESSIONLEVEL_MINHC) as f_out:
