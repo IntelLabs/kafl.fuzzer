@@ -7,6 +7,7 @@ from argparse import Namespace
 from appdirs import AppDirs
 from dynaconf import Dynaconf, Validator, ValidationError, loaders, LazySettings
 from dynaconf.utils.boxing import DynaBox
+from dynaconf.utils.functional import empty
 
 from typing import List, Optional, Any
 
@@ -87,8 +88,8 @@ def cast_expand_path(parameter: Any) -> Optional[str]:
     return str(p)
 
 def cast_expand_path_no_verify(parameter: Any) -> Optional[str]:
-    if parameter is None:
-        return None
+    if parameter is empty:
+        return parameter
     exp_str = os.path.expandvars(parameter)
     return exp_str
 
