@@ -59,7 +59,7 @@ class ManagerTask:
     def send_next_task(self, conn):
         # Inputs placed to imports/ folder have priority.
         # This can also be used to inject additional seeds at runtime.
-        imports = glob.glob(self.config.work_dir + "/imports/*")
+        imports = glob.glob(self.config.workdir + "/imports/*")
         if imports:
             path = imports.pop()
             logger.debug("Importing payload from %s" % path)
@@ -140,7 +140,7 @@ class ManagerTask:
 
     def store_trace(self, node, tmp_trace):
         if tmp_trace and os.path.exists(tmp_trace):
-            trace_dump_out = "%s/traces/fuzz_%05d.bin" % (self.config.work_dir, node.get_id())
+            trace_dump_out = "%s/traces/fuzz_%05d.bin" % (self.config.workdir, node.get_id())
             with open(tmp_trace, 'rb') as f_in:
                 with lz4.LZ4FrameFile(trace_dump_out + ".lz4", 'wb',
                         compression_level=lz4.COMPRESSIONLEVEL_MINHC) as f_out:

@@ -56,7 +56,7 @@ class Graph:
             for nodefile in sorted(glob.glob(self.workdir + "/metadata/node_*")):
                 self.__process_node(nodefile)
         except:
-            logger.error("Error processing stats at given work_dir %s. Aborting." % repr(self.workdir))
+            logger.error("Error processing stats at given workdir %s. Aborting." % repr(self.workdir))
             raise
 
         if self.outfile:
@@ -136,8 +136,8 @@ class Graph:
 def start(settings: LazySettings):
     print_banner("kAFL Plotter")
 
-    if glob.glob(settings.work_dir + "/worker_stats_*") == []:
-        logging.warn("No kAFL statistics found in %s. Invalid workdir?", settings.work_dir)
+    if glob.glob(settings.workdir + "/worker_stats_*") == []:
+        logging.warn("No kAFL statistics found in %s. Invalid workdir?", settings.workdir)
 
-    dot = Graph(settings.work_dir, settings.outfile)
+    dot = Graph(settings.workdir, settings.outfile)
     dot.process_once()

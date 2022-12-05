@@ -7,6 +7,7 @@ from argparse import Namespace
 from appdirs import AppDirs
 from dynaconf import Dynaconf, Validator, ValidationError, loaders, LazySettings
 from dynaconf.utils.boxing import DynaBox
+from dynaconf.utils.functional import empty
 
 from typing import List, Optional, Any
 
@@ -87,15 +88,15 @@ def cast_expand_path(parameter: Any) -> Optional[str]:
     return str(p)
 
 def cast_expand_path_no_verify(parameter: Any) -> Optional[str]:
-    if parameter is None:
-        return None
+    if parameter is empty:
+        return parameter
     exp_str = os.path.expandvars(parameter)
     return exp_str
 
 # register validators
 settings.validators.register(
     # general
-    Validator("work_dir", must_exist=True, cast=cast_expand_path_no_verify),
+    Validator("workdir", must_exist=True, cast=cast_expand_path_no_verify),
     Validator("purge", default=False, cast=bool),
     Validator("resume", default=False, cast=bool),
     Validator("processes", cast=int),
@@ -159,7 +160,7 @@ settings.validators.register(
     # mcat
     Validator("pack_file"),
     # internal for kAFL
-    Validator("workdir_config", default=lambda config, _validator: str(Path(config.work_dir) / DEFAULT_CONFIG_FILENAME), cast=cast_expand_path_no_verify)
+    Validator("workdir_config", default=lambda config, _validator: str(Path(config.workdir) / DEFAULT_CONFIG_FILENAME), cast=cast_expand_path_no_verify)
 )
 
 def update_from_namespace(namespace: Namespace):

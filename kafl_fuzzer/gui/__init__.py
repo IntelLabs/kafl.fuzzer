@@ -802,7 +802,7 @@ class GuiData:
 
 
 def main(stdscr):
-    gui = GuiDrawer(settings.work_dir, stdscr)
+    gui = GuiDrawer(settings.workdir, stdscr)
     gui.loop()
 
 

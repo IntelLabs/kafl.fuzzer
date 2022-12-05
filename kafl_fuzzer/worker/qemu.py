@@ -52,25 +52,25 @@ class qemu:
         self.control = None
         self.persistent_runs = 0
 
-        work_dir = self.config.work_dir
+        workdir = self.config.workdir
 
-        self.qemu_aux_buffer_filename = work_dir + "/aux_buffer_%d" % self.pid
+        self.qemu_aux_buffer_filename = workdir + "/aux_buffer_%d" % self.pid
 
-        self.bitmap_filename = work_dir + "/bitmap_%d" % self.pid
-        self.ijonmap_filename = work_dir + "/ijon_%d" % self.pid
-        self.payload_filename = work_dir + "/payload_%d" % self.pid
-        self.control_filename = work_dir + "/interface_%d" % self.pid
-        self.qemu_trace_log = work_dir + "/qemu_trace_%02d.log" % self.pid
-        self.serial_logfile = work_dir + "/serial_%02d.log" % self.pid
+        self.bitmap_filename = workdir + "/bitmap_%d" % self.pid
+        self.ijonmap_filename = workdir + "/ijon_%d" % self.pid
+        self.payload_filename = workdir + "/payload_%d" % self.pid
+        self.control_filename = workdir + "/interface_%d" % self.pid
+        self.qemu_trace_log = workdir + "/qemu_trace_%02d.log" % self.pid
+        self.serial_logfile = workdir + "/serial_%02d.log" % self.pid
         self.hprintf_log = self.config.log_hprintf or self.config.log_crashes
-        self.hprintf_logfile = work_dir + "/hprintf_%02d.log" % self.pid
+        self.hprintf_logfile = workdir + "/hprintf_%02d.log" % self.pid
 
         self.redqueen_workdir = RedqueenWorkdir(self.pid, config)
         self.redqueen_workdir.init_dir()
 
         if not resume:
             for page_cache_ext in ["lock", "dump", "addr"]:
-                with open(self.config.work_dir + "/page_cache." + page_cache_ext, 'w') as f:
+                with open(self.config.workdir + "/page_cache." + page_cache_ext, 'w') as f:
                     f.truncate(0)
 
         self.starved = False
@@ -80,7 +80,7 @@ class qemu:
         self.cmd = self.config.qemu_base
         self.cmd += " -chardev socket,server,id=nyx_socket,path=" + self.control_filename + \
                     " -device nyx,chardev=nyx_socket" + \
-                    ",workdir=" + work_dir + \
+                    ",workdir=" + workdir + \
                     ",worker_id=%d" % self.pid + \
                     ",bitmap_size=" + str(self.bitmap_size) + \
                     ",input_buffer_size=" + str(self.payload_size)
@@ -138,7 +138,7 @@ class qemu:
 
         # Fast VM snapshot configuration
         self.cmd.append("-fast_vm_reload")
-        snapshot_path = work_dir + "/snapshot/"
+        snapshot_path = workdir + "/snapshot/"
 
         if pid == 0 or pid == 1337 and not resume:
             # boot and create snapshot
@@ -346,7 +346,7 @@ class qemu:
         if self.hprintf_log and os.path.exists(self.hprintf_logfile):
             if os.path.getsize(self.hprintf_logfile) > 0:
                 shutil.copy(self.hprintf_logfile, "%s/logs/%s_%s.log" % (
-                    self.config.work_dir, label[:5], stamp[:6]))
+                    self.config.workdir, label[:5], stamp[:6]))
                 os.truncate(self.hprintf_logfile, 0)
 
     def flush_crashlogs(self):

@@ -54,7 +54,7 @@ def add_logging_file(config: LazySettings):
     assert(LOGGING_CONFIG is not None)
     if config.log:
         # define file handler filepath
-        log_filepath = Path(config.work_dir) / DEBUG_FILENAME
+        log_filepath = Path(config.workdir) / DEBUG_FILENAME
         # define file handler in log_config
         LOGGING_CONFIG['handlers']['file'] = {
             'class': 'logging.FileHandler',

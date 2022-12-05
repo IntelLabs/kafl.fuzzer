@@ -26,7 +26,7 @@ KAFL_NAMED_SOCKET = '/kafl_socket'
 class ServerConnection:
     def __init__(self, config):
         Listener.fileno = lambda self: self._listener._socket.fileno()
-        self.address = config.work_dir + KAFL_NAMED_SOCKET
+        self.address = config.workdir + KAFL_NAMED_SOCKET
         self.listener = Listener(self.address, 'AF_UNIX', backlog=1000)
         self.clients = [self.listener]
         self.clients_seen = 0
@@ -66,7 +66,7 @@ class ServerConnection:
 class ClientConnection:
     def __init__(self, pid, config):
         self.pid = pid
-        self.address = config.work_dir + KAFL_NAMED_SOCKET
+        self.address = config.workdir + KAFL_NAMED_SOCKET
         self.sock = self.connect()
 
     def connect(self):

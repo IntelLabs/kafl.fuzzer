@@ -58,7 +58,8 @@ def hidden(msg, unmask=False):
 
 def add_workdir_argument(parser):
     """add the workdir argument to the given parser"""
-    parser.add_argument('-w', '--work-dir', metavar='<dir>', required=False, help='path to the output/working directory.')
+    parser.add_argument('-w', '--workdir', '--work-dir', dest='workdir', metavar='<dir>', required=False,
+                        help='path to the output/working directory.')
 
 # General startup options used by fuzzer, qemu, and/or utilities
 def add_args_general(parser):

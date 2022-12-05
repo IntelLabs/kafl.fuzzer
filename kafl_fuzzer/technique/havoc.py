@@ -35,7 +35,7 @@ def init_havoc(config):
         append_handler(havoc_dict_insert)
         append_handler(havoc_dict_replace)
 
-    location_corpus = config.work_dir + "/corpus/"
+    location_corpus = config.workdir + "/corpus/"
 
 
 def havoc_range(perf_score):

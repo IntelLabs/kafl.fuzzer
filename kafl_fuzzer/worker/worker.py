@@ -80,8 +80,8 @@ class WorkerTask:
         self.conn.send_ready()
 
     def handle_node(self, msg):
-        meta_data = QueueNode.get_metadata(self.config.work_dir, msg["task"]["nid"])
-        payload = QueueNode.get_payload(self.config.work_dir, meta_data)
+        meta_data = QueueNode.get_metadata(self.config.workdir, msg["task"]["nid"])
+        payload = QueueNode.get_payload(self.config.workdir, meta_data)
 
         # fixme: determine globally based on all seen regulars
         t_dyn = self.t_soft + 1.2 * meta_data["info"]["performance"]
@@ -210,7 +210,7 @@ class WorkerTask:
 
     def store_funky(self, data):
         # store funky input for further analysis 
-        filename = f"%s/funky/payload_%04x%02x" % (self.config.work_dir, self.num_funky, self.pid)
+        filename = f"%s/funky/payload_%04x%02x" % (self.config.workdir, self.num_funky, self.pid)
         atomic_write(filename, data)
         self.num_funky += 1
 
@@ -256,10 +256,10 @@ class WorkerTask:
         # This is generally slower and produces different bitmaps so we execute it in
         # a different phase as part of calibration stage.
         # Optionally pickup pt_trace_dump* files as well in case both methods are enabled.
-        trace_edge_in = self.config.work_dir + "/redqueen_workdir_%d/pt_trace_results.txt" % self.pid
-        trace_dump_in = self.config.work_dir + "/pt_trace_dump_%d" % self.pid
-        trace_edge_out = self.config.work_dir + "/traces/fuzz_cb_%05d.lst" % info['id']
-        trace_dump_out = self.config.work_dir + "/traces/fuzz_cb_%05d.bin" % info['id']
+        trace_edge_in = self.config.workdir + "/redqueen_workdir_%d/pt_trace_results.txt" % self.pid
+        trace_dump_in = self.config.workdir + "/pt_trace_dump_%d" % self.pid
+        trace_edge_out = self.config.workdir + "/traces/fuzz_cb_%05d.lst" % info['id']
+        trace_dump_out = self.config.workdir + "/traces/fuzz_cb_%05d.bin" % info['id']
 
         self.logger.info("Tracing payload_%05d..", info['id'])
 
@@ -368,9 +368,9 @@ class WorkerTask:
                     exec_res.performance = (exec_res.performance + runtime)/2
 
                 if trace_pt and stable:
-                    trace_in = "%s/pt_trace_dump_%d" % (self.config.work_dir, self.pid)
+                    trace_in = "%s/pt_trace_dump_%d" % (self.config.workdir, self.pid)
                     if os.path.exists(trace_in):
-                        with tempfile.NamedTemporaryFile(delete=False,dir=self.config.work_dir + "/traces") as f:
+                        with tempfile.NamedTemporaryFile(delete=False,dir=self.config.workdir + "/traces") as f:
                             shutil.move(trace_in, f.name)
                             info['pt_dump'] = f.name
                 if not stable:
