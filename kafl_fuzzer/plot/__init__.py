@@ -24,10 +24,10 @@ logger = logging.getLogger(__name__)
 
 class Graph:
 
-    def __init__(self, workdir, outfile):
+    def __init__(self, workdir, dotfile):
 
         self.workdir = workdir
-        self.outfile = outfile
+        self.dotfile = dotfile
 
         self.global_startup = time.time()
         self.global_executions = 0
@@ -37,7 +37,7 @@ class Graph:
 
     def process_once(self):
 
-        if self.outfile:
+        if self.dotfile:
             try:
                 import pygraphviz as pgv
             except ImportError:
@@ -48,7 +48,7 @@ class Graph:
             self.dot.graph_attr['epsilon'] = '0.0008'
             self.dot.graph_attr['defaultdist'] = '2'
             self.dot.add_node(0, label="Start")
-            self.dot.write(self.outfile)
+            self.dot.write(self.dotfile)
 
         try:
             for worker_stats in sorted(glob.glob(self.workdir + "/worker_stats_*")):
@@ -59,13 +59,9 @@ class Graph:
             logger.error("Error processing stats at given workdir %s. Aborting." % repr(self.workdir))
             raise
 
-        if self.outfile:
-            self.dot.write(self.outfile)
-            logger.info("\nOutput written to %s." % self.outfile)
-
-    def flush(self):
-        if self.outfile:
-            self.dot.write(self.outfile)
+        if self.dotfile:
+            self.dot.write(self.dotfile)
+            logger.info("\nOutput written to %s." % self.dotfile)
 
     def __read_msgpack(self, name):
         return msgpack.unpackb(read_binary_file(name), strict_map_key=False)
@@ -126,7 +122,7 @@ class Graph:
                 (t_str, node_id, parent, method[:10].ljust(10), sample[:32].ljust(32),
                     stage[:8].ljust(8), exit[:1].title(), len(favs), score, plen/1024, perf*1000, prio, t_seen))
 
-        if self.outfile:
+        if self.dotfile:
             self.dot.add_node(node["id"], label="%s\n[id=%02d, score=%2.2f]\n%s" % (sample[:12], node_id, score, exit), color=color)
             self.dot.add_edge(parent, node["id"], headlabel=method, arrowhead='open')
 
@@ -139,5 +135,5 @@ def start(settings: LazySettings):
     if glob.glob(settings.workdir + "/worker_stats_*") == []:
         logging.warn("No kAFL statistics found in %s. Invalid workdir?", settings.workdir)
 
-    dot = Graph(settings.workdir, settings.outfile)
+    dot = Graph(settings.workdir, settings.dot_file)
     dot.process_once()

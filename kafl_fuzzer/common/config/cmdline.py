@@ -222,7 +222,7 @@ class ConfigParserBuilder():
         plot_subcommand: ArgumentParser = parser.add_parser(KaflSubcommands.PLOT.name.lower(), help="kAFL Plotter")
 
         add_workdir_argument(plot_subcommand)
-        plot_subcommand.add_argument("--outfile", metavar="<outfile>", help="Output file for kAFL Plotter")
+        plot_subcommand.add_argument("--dot-file", metavar="<dotfile>", help="Write DOT graph to file (requires pygraphviz)")
 
         plot_subcommand.set_defaults(func=plot_start)
 
