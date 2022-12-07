@@ -8,7 +8,6 @@ import shutil
 import sys
 import tempfile
 import string
-import getpass
 import logging
 from shutil import copyfile
 
@@ -29,13 +28,10 @@ class Singleton(type):
 
 # print any qemu-like processes owned by this user
 def qemu_sweep(msg):
-    def get_qemu_processes():
-        for proc in psutil.process_iter(['pid', 'name', 'username']):
-            if proc.info['username'] == getpass.getuser():
-                if 'qemu-system-x86_64' in proc.info['name']:
-                    yield (proc.info['pid'])
-
-    pids = [ p for p in get_qemu_processes() ]
+    pids = [
+        p.info['pid'] for p in psutil.process_iter(['pid', 'name', 'uids'])
+        if p.info['name'] == 'qemu-system-x86_64' and p.info['uids'].real == os.getuid()
+    ]
 
     if (len(pids) > 0):
         logger.warn(msg + " " + repr(pids))
