@@ -278,7 +278,7 @@ class qemu:
         self.logger.debug("Handshake done.")
 
         # for -R = {0,1}, set reload_mode here just once
-        if self.config.reload == 1:
+        if self.config['reload'] == 1:
             self.qemu_aux_buffer.set_reload_mode(True)
         else:
             self.qemu_aux_buffer.set_reload_mode(False)
@@ -416,11 +416,12 @@ class qemu:
             sys.exit(0)
 
         # for -R > 1, count and toggle reload_mode at runtime
+        # note the special syntax for config['reload'] due to dynaconfig internals
         if self.config['reload'] > 1:
             self.persistent_runs += 1
             if self.persistent_runs == 1:
                 self.qemu_aux_buffer.set_reload_mode(False)
-            if self.persistent_runs >= self.config.reload:
+            if self.persistent_runs >= self.config['reload']:
                 self.qemu_aux_buffer.set_reload_mode(True)
                 self.persistent_runs = 0
 
