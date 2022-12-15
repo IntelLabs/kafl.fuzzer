@@ -11,6 +11,7 @@ Manage overall fuzz inputs/findings and schedule work for Worker instances.
 
 import glob
 import os
+import time
 
 import logging
 import mmh3
@@ -104,8 +105,7 @@ class ManagerTask:
                         logger.debug("Received new input (exit=%s): %s" % (
                            msg["input"]["info"]["exit_reason"],
                            repr(msg["input"]["payload"][:24])))
-                    node_struct = {"info": msg["input"]["info"], "state": {"name": "initial"}}
-                    self.maybe_insert_node(msg["input"]["payload"], msg["input"]["bitmap"], node_struct)
+                    self.maybe_insert_node(msg["input"]["payload"], msg["input"]["bitmap"], msg["input"]["info"])
                 elif msg["type"] == MSG_READY:
                     # Worker is ready for new input (initial hello or import done)
                     logger.debug(f"Worker {msg['worker_id']} sent READY..")
@@ -126,11 +126,9 @@ class ManagerTask:
 
 
     def check_abort_condition(self):
-        import time
-
         t_limit = self.config.abort_time
         n_limit = self.config.abort_exec
-        
+
         if t_limit:
             if t_limit*3600 < time.time() - self.statistics.data['start_time']:
                 raise SystemExit("Exit on timeout.")
@@ -138,36 +136,40 @@ class ManagerTask:
             if n_limit < self.statistics.data['total_execs']:
                 raise SystemExit("Exit on max execs.")
 
-    def store_trace(self, node, tmp_trace):
+    def store_trace(self, nid, tmp_trace):
         if tmp_trace and os.path.exists(tmp_trace):
-            trace_dump_out = "%s/traces/fuzz_%05d.bin" % (self.config.workdir, node.get_id())
+            trace_dump_out = "%s/traces/fuzz_%05d.bin" % (self.config.workdir, nid)
             with open(tmp_trace, 'rb') as f_in:
                 with lz4.LZ4FrameFile(trace_dump_out + ".lz4", 'wb',
                         compression_level=lz4.COMPRESSIONLEVEL_MINHC) as f_out:
                     shutil.copyfileobj(f_in, f_out)
             os.remove(tmp_trace)
 
-    def maybe_insert_node(self, payload, bitmap_array, node_struct):
-        bitmap = ExecutionResult.bitmap_from_bytearray(bitmap_array, node_struct["info"]["exit_reason"],
-                                                       node_struct["info"]["performance"])
+    def maybe_insert_node(self, payload, bitmap_array, info):
+        bitmap = ExecutionResult.bitmap_from_bytearray(bitmap_array,
+                                                       info["exit_reason"],
+                                                       info["performance"])
         bitmap.lut_applied = True  # since we received the bitmap from Worker, the lut was already applied
-        backup_data = bitmap.copy_to_array()
+        if self.config.debug:
+            backup_data = bitmap.copy_to_array()
+
+        tmp_trace_file = info.get("pt_dump", None)
         should_store, new_bytes, new_bits = self.bitmap_storage.should_store_in_queue(bitmap)
-        new_data = bitmap.copy_to_array()
-        trace_dump_tmp = node_struct["info"].get("pt_dump", None)
         if should_store:
+            node_struct = {"info": info, "state": {"name": "initial"}}
             node = QueueNode(self.config, payload, bitmap_array, node_struct, write=False)
             node.set_new_bytes(new_bytes, write=False)
             node.set_new_bits(new_bits, write=False)
             self.queue.insert_input(node, bitmap)
-            self.store_trace(node, trace_dump_tmp)
+            self.store_trace(node.get_id(), tmp_trace_file)
             return
 
-        if trace_dump_tmp and os.path.exists(trace_dump_tmp):
-            os.remove(trace_dump_tmp)
+        if tmp_trace_file and os.path.exists(tmp_trace_file):
+            os.remove(tmp_trace_file)
 
         if self.config.debug:
-            logger.debug("Received duplicate payload with exit=%s, discarding." % node_struct["info"]["exit_reason"])
+            logger.debug("Received duplicate payload with exit=%s, discarding." % info["exit_reason"])
+            new_data = bitmap.copy_to_array()
             for i in range(len(bitmap_array)):
                 if backup_data[i] != new_data[i]:
                     assert(False), "Bitmap mangled at {} {} {}".format(i, repr(backup_data[i]), repr(new_data[i]))
