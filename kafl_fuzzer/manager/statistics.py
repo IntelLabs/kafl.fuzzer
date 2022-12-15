@@ -34,6 +34,7 @@ class ManagerStatistics:
                 "num_reload": 0,
                 "num_timeout": 0,
                 "num_slow": 0,
+                "num_trashed": 0,
                 "max_bb_cov" : 0,
                 "paths_total": 0,
                 "paths_pending": 0,
@@ -155,6 +156,7 @@ class ManagerStatistics:
         sum_reload = 0
         sum_timeout = 0
         sum_slow = 0
+        sum_trashed = 0
         max_bb_cov = 0
         try:
             for pid in range(0, self.num_workers):
@@ -164,15 +166,17 @@ class ManagerStatistics:
                 sum_reload  += self.read_worker_stats(pid).get("num_reload", 0)
                 sum_timeout += self.read_worker_stats(pid).get("num_timeout", 0)
                 sum_slow    += self.read_worker_stats(pid).get("num_slow", 0)
+                sum_trashed += self.read_worker_stats(pid).get("num_trashed", 0)
                 max_bb_cov = max(max_bb_cov,
                                  self.read_worker_stats(pid).get("bb_seen", 0))
-        except:
+        except (FileNotFoundError, msgpack.UnpackException):
             return # don't update on read failure
         self.data["total_execs"] = sum_execs
         self.data["num_funky"]   = sum_funky
         self.data["num_reload"]  = sum_reload
         self.data["num_timeout"] = sum_timeout
         self.data["num_slow"]    = sum_slow
+        self.data["num_trashed"] = sum_trashed
         self.data["max_bb_cov"]  = max_bb_cov
 
     def event_node_update(self, node, update):
@@ -255,6 +259,7 @@ class WorkerStatistics:
             "num_funky": 0,
             "num_timeout": 0,
             "num_slow": 0,
+            "num_trashed" : 0,
             "executions_redqueen": 0,
             "node_id": 0,
         }
@@ -270,9 +275,11 @@ class WorkerStatistics:
         self.data["method"] = method
         self.maybe_write_stats()
 
-    def event_exec(self, bb_cov=0):
+    def event_exec(self, bb_cov, trashed):
         if self.data["bb_seen"] < bb_cov:
             self.data["bb_seen"] = bb_cov
+        if trashed:
+            self.data["num_trashed"] += 1
         self.execs_new += 1
         self.maybe_write_stats()
 

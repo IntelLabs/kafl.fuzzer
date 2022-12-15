@@ -161,7 +161,6 @@ class WorkerTask:
 
     def quick_validate(self, data, old_res, trace=False):
         # Validate in persistent mode. Faster but problematic for very funky targets
-        self.statistics.event_exec()
         old_array = old_res.copy_to_array()
 
         if trace:
@@ -248,6 +247,7 @@ class WorkerTask:
         info["performance"] = exec_res.performance
         info["hash"]        = exec_res.hash()
         info["starved"]     = exec_res.starved
+        info["trashed"]     = exec_res.trashed
         if self.conn is not None:
             self.conn.send_new_input(data, exec_res.copy_to_array(), info)
 
@@ -307,7 +307,6 @@ class WorkerTask:
             self.q.set_timeout(timeout)
 
         exec_res = self.__execute(data)
-        self.statistics.event_exec(bb_cov=self.q.bb_seen)
 
         if timeout:
             self.q.set_timeout(old_timeout)
@@ -324,7 +323,9 @@ class WorkerTask:
 
         try:
             self.q.set_payload(data)
-            return self.q.send_payload()
+            res = self.q.send_payload()
+            self.statistics.event_exec(bb_cov=self.q.bb_seen, trashed=res.trashed)
+            return res
         except (ValueError, BrokenPipeError, ConnectionResetError) as e:
             if retry > 2:
                 # TODO if it reliably kills qemu, perhaps log to Manager for harvesting..
@@ -344,7 +345,6 @@ class WorkerTask:
             data = data[:self.payload_limit]
 
         exec_res = self.__execute(data)
-        self.statistics.event_exec(bb_cov=self.q.bb_seen)
 
         is_new_input = self.bitmap_storage.should_send_to_manager(exec_res, exec_res.exit_reason)
         crash = exec_res.is_crash()

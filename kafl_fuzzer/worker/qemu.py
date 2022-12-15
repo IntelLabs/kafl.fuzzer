@@ -50,6 +50,7 @@ class qemu:
 
         self.process = None
         self.control = None
+        self.exiting = False
         self.persistent_runs = 0
 
         work_dir = self.config.work_dir
@@ -72,9 +73,6 @@ class qemu:
             for page_cache_ext in ["lock", "dump", "addr"]:
                 with open(self.config.work_dir + "/page_cache." + page_cache_ext, 'w') as f:
                     f.truncate(0)
-
-        self.starved = False
-        self.exiting = False
 
         # TODO: list append should work better than string concatenation, especially for str.replace() and later popen()
         self.cmd = self.config.qemu_base
@@ -397,7 +395,7 @@ class qemu:
             if result.page_fault:
                 self.logger.warn("Unhandled page fault in debug mode!")
             if result.pt_overflow:
-                self.logger.warn("PT trashed!")
+                self.logger.warn("PT overflow!")
             if result.exec_code == RC.HPRINTF:
                 self.handle_hprintf()
                 continue
@@ -438,7 +436,7 @@ class qemu:
             result = self.qemu_aux_buffer.get_result()
 
             if result.pt_overflow:
-                self.logger.warn("PT trashed!")
+                self.logger.debug("PT overflow!")
 
             if result.exec_code == RC.HPRINTF:
                 self.handle_hprintf()
@@ -451,7 +449,7 @@ class qemu:
                 break
 
             if result.page_fault:
-                self.logger.warn("Page fault encountered!")
+                self.logger.debug("Page fault encountered!")
                 if result.page_fault_addr == old_address:
                     self.logger.error("Failed to resolve page after second execution! Qemu status:\n%s", str(result._asdict()))
                     break
@@ -463,15 +461,15 @@ class qemu:
 
         #runtime = result.runtime_sec + result.runtime_usec/1000/1000
         res = ExecutionResult(
-                self.c_bitmap, self.bitmap_size,
-                self.exit_reason(result), time.time() - start_time)
-
-        if result.exec_code == RC.STARVED:
-            res.starved = True
+                self.c_bitmap,
+                self.bitmap_size,
+                self.exit_reason(result),
+                time.time() - start_time,
+                starved = result.exec_code == RC.STARVED,
+                trashed = result.pt_overflow)
 
         #self.audit(res.copy_to_array())
         #self.audit(bytearray(self.c_bitmap))
-
         return res
 
     def audit(self, bitmap):
