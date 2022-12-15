@@ -22,7 +22,7 @@ class ExecutionResult:
         # corresponds to libxdc_bitmap_get_hash()
         return "%016x" % mmh3.hash64(bytes(bitmap_size), seed=0xaaaaaaaa, x64arch=True, signed=False)[0]
 
-    def __init__(self, cbuffer, bitmap_size, exit_reason, performance):
+    def __init__(self, cbuffer, bitmap_size, exit_reason, performance, starved=False, trashed=False):
         if not ExecutionResult.bitmap_native_so:
             ExecutionResult.bitmap_native_so = ctypes.CDLL(native_loader.bitmap_path())
 
@@ -31,7 +31,8 @@ class ExecutionResult:
         self.lut_applied = False  # By default we assume that the bucket lut has not yet been applied
         self.exit_reason = exit_reason
         self.performance = performance
-        self.starved = False
+        self.starved = starved
+        self.trashed = trashed
 
     def invalidate(self):
         self.cbuffer = None
