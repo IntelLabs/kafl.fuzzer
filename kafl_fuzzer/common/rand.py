@@ -31,12 +31,9 @@ class rand:
     #   if rand.int(2)        # execute with p(0.5)
     # a[rand.int(len(a)) = 5  # never out of bounds
     def int(limit):
-        try:
-            return fastrand.pcg32bounded(limit)
-        except:
-            if limit == 0:
-                return 0
-            raise
+        if limit == 0:
+            return 0
+        return fastrand.pcg32bounded(limit)
 
     def select(arg):
         return arg[rand.int(len(arg))]
