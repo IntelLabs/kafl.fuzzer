@@ -16,6 +16,8 @@
 - add early logging of fuzzer loaded configuration before validation (#38)
     - deprecate `KAFL_CONFIG_DEBUG`
 - remove `pygraphviz` dependency (#43)
+- `input` config key will default to the `workdir` value (#58)
+    - no need to specify `kafl cov --input $KAFL_WORKDIR` anymore
 
 # 🔧 Fixes
 
