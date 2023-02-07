@@ -1,4 +1,20 @@
-# kAFL-Fuzzer
+<h1 align="center">
+  <br>kAFL-Fuzzer</br>
+</h1>
+
+<h3 align="center">
+HW-assisted Feedback Fuzzer for x86 VMs
+</h3>
+
+<p align="center">
+  <a href="https://github.com/IntelLabs/kafl.fuzzer/actions/workflows/ci.yml">
+    <img src="https://github.com/IntelLabs/kafl.fuzzer/actions/workflows/ci.yml/badge.svg" alt="CI">
+  </a>
+  <a href="https://github.com/IntelLabs/kafl.fuzzer/releases">
+    <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/IntelLabs/kafl.fuzzer">
+  </a>
+</p>
+
 
 `Note: All components are provided for research and validation purposes only. Use at your own risk.`
 
