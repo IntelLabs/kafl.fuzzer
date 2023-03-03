@@ -151,7 +151,7 @@ settings.validators.register(
     Validator("trace", default=False, cast=bool),
     Validator("trace_cb", default=False, cast=bool),
     # debug
-    Validator("input", default=lambda config, _validator: config.workdir, cast=cast_expand_path),
+    Validator("input", default=lambda config, _validator: config.workdir, cast=cast_expand_path_no_verify),
     Validator("iterations", cast=int),
     Validator("action", is_in=VALID_DEBUG_ACTIONS),
     Validator("ptdump_path", default=None, cast=cast_expand_path),
