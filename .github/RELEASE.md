@@ -24,6 +24,7 @@
 - avoid Qemu hang when handling ABORT in pre-init phase (#34)
 - fix including `default_settings.yaml` in the final package (#35)
 - remove dynaconf validation workaround (#60)
+- fix appdirs import (#61)
 
 # 📖 Documentation
 
