@@ -113,6 +113,7 @@ settings.validators.register(
     Validator("afl_skip_range", default=None),
     Validator("afl_arith_max", cast=int),
     Validator("radamsa", default=False, cast=bool),
+    Validator("grimoire", default=False, cast=bool),
     Validator("redqueen", default=False, cast=bool),
     Validator("redqueen_hashes", default=False, cast=bool),
     Validator("redqueen_hammer", default=False, cast=bool),
