@@ -20,15 +20,17 @@ VALID_DEBUG_ACTIONS = ["benchmark", "gdb", "trace", "single", "trace-qemu", "noi
 
 # default internal to kAFL
 DEFAULT_CONFIG_FILENAME = "config.yaml"
+APPDIRS = AppDirs(APPNAME)
+
 
 def app_settings_files() -> List[str]:
     settings_files = [
         # default config
         str(CUR_DIR / f"default_{SETTINGS_FILENAME}"),
         # /etc/xdg/kAFL/
-        str(Path(appdirs.site_config_dir) / SETTINGS_FILENAME),
+        str(Path(APPDIRS.site_config_dir) / SETTINGS_FILENAME),
         # $HOME/.config/kAFL
-        str(Path(appdirs.user_config_dir) / SETTINGS_FILENAME),
+        str(Path(APPDIRS.user_config_dir) / SETTINGS_FILENAME),
         # local
         "kafl.yaml",
     ]
@@ -41,7 +43,6 @@ def app_settings_files() -> List[str]:
         settings_files.append(env_config_file)
     return settings_files
 
-appdirs = AppDirs(APPNAME)
 settings = Dynaconf(
     envvar_prefix=APPNAME.upper(),
     settings_files=app_settings_files()
