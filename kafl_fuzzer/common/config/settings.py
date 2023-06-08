@@ -127,7 +127,7 @@ settings.validators.register(
     Validator("kickstart", cast=int),
     Validator("radamsa_path", default=None, cast=cast_expand_path),
     # qemu
-    Validator("qemu_image", default=None, cast=cast_expand_path),
+    Validator("qemu_image", default=None),
     Validator("qemu_snapshot", default=None, cast=cast_expand_path),
     Validator("qemu_bios", default=None, cast=cast_expand_path),
     Validator("qemu_kernel", default=None, cast=cast_expand_path),
