@@ -200,8 +200,14 @@ def dump_config():
     # dump to a file, format is infered by file extension
     loaders.write(settings.workdir_config, DynaBox(config).to_dict())
 
-def load_config() -> LazySettings:
-    """Load an additional configuration file with Dynaconf and returns the settings object"""
+def load_config(keys: Optional[List[str]]) -> LazySettings:
+    """Load an additional configuration file with Dynaconf and returns the settings object
+    
+    keys: only load the specified keys"""
     global settings
-    settings.load_file(settings.workdir_config, silent=False, validate=True)
+    if keys is None:
+        settings.load_file(settings.workdir_config, silent=False, validate=True)
+    else:
+        for k in keys:
+            settings.load_file(settings.workdir_config, key=k, silent=False, validate=True)
     return settings
