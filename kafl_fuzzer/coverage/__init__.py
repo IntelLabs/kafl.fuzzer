@@ -37,6 +37,7 @@ from kafl_fuzzer.common.logger import add_logging_file
 from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_sweep, print_banner
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu import qemu
+from kafl_fuzzer.common.config import load_config
 
 import csv
 
@@ -475,6 +476,13 @@ def start(settings: LazySettings):
     global null_hash
 
     print_banner("kAFL Coverage Analyzer")
+
+    # load additional config file from workdir
+    # (in order to get IPx settings generated during fuzz run)
+    try:
+        load_config()
+    except FileNotFoundError:
+        logging.debug("Unable to load workdir kAFL config")
 
     if not self_check():
         return -1
