@@ -38,6 +38,7 @@ from kafl_fuzzer.common.util import prepare_working_dir, read_binary_file, qemu_
 from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu import qemu
 from kafl_fuzzer.common.config import load_config
+from kafl_fuzzer.common.config.settings import INTEL_PT_MAX_RANGES
 
 import csv
 
@@ -479,8 +480,9 @@ def start(settings: LazySettings):
 
     # load additional config file from workdir
     # (in order to get IPx settings generated during fuzz run)
+    pt_ip_keys = [f'ip{i}' for i in range(INTEL_PT_MAX_RANGES)]
     try:
-        load_config()
+        load_config(pt_ip_keys)
     except FileNotFoundError:
         logging.debug("Unable to load workdir kAFL config")
 
