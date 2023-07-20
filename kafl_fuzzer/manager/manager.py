@@ -101,10 +101,9 @@ class ManagerTask:
                         self.queue.update_node_results(msg["node_id"], msg["results"], None)
                 elif msg["type"] == MSG_NEW_INPUT:
                     # Worker reports new interesting input
-                    if self.config.debug:
-                        logger.debug("Received new input (exit=%s): %s" % (
-                           msg["input"]["info"]["exit_reason"],
-                           repr(msg["input"]["payload"][:24])))
+                    logger.debug("Received new input (exit=%s): %s" % (
+                       msg["input"]["info"]["exit_reason"],
+                       repr(msg["input"]["payload"][:24])))
                     self.maybe_insert_node(msg["input"]["payload"], msg["input"]["bitmap"], msg["input"]["info"])
                 elif msg["type"] == MSG_READY:
                     # Worker is ready for new input (initial hello or import done)
