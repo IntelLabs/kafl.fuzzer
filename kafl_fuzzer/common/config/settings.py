@@ -70,6 +70,9 @@ def cast_ip_range_to_list(parameter: Any) -> Optional[List[int]]:
     """Checks that a given IP range string is valid and returns a List of that range"""
     if parameter is None:
         return None
+    if isinstance(parameter, list):
+        # revalidation triggered, already a list
+        return parameter
     m = re.match(r"([(0-9abcdef]{1,16})(?:-([0-9abcdef]{1,16}))?$", parameter.replace("0x", "").lower())
     if not m:
         raise ValueError(f"{parameter}: invalid range specified: not a number")
@@ -200,5 +203,5 @@ def dump_config():
 def load_config() -> LazySettings:
     """Load an additional configuration file with Dynaconf and returns the settings object"""
     global settings
-    settings.load_file(settings.workdir_config, silent=False)
+    settings.load_file(settings.workdir_config, silent=False, validate=True)
     return settings
