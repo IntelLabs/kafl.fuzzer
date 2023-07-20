@@ -20,6 +20,9 @@ VALID_DEBUG_ACTIONS = ["benchmark", "gdb", "trace", "single", "trace-qemu", "noi
 
 # default internal to kAFL
 DEFAULT_CONFIG_FILENAME = "config.yaml"
+WORKDIR_SNAPSHOT_DIRNAME = "snapshot"
+DEFAULT_CONFIG_SNAPSHOT_META_FILENAME = "state.yaml"
+INTEL_PT_MAX_RANGES = 4
 APPDIRS = AppDirs(APPNAME)
 
 
@@ -92,7 +95,9 @@ def cast_expand_path_no_verify(parameter: Any) -> Optional[str]:
     if parameter is empty:
         return parameter
     exp_str = os.path.expandvars(parameter)
-    return exp_str
+    # ensure absolute path
+    abs_path = Path(exp_str).resolve()
+    return str(abs_path)
 
 # register validators
 settings.validators.register(
@@ -162,7 +167,8 @@ settings.validators.register(
     # mcat
     Validator("pack_file"),
     # internal for kAFL
-    Validator("workdir_config", default=lambda config, _validator: str(Path(config.workdir) / DEFAULT_CONFIG_FILENAME), cast=cast_expand_path_no_verify)
+    Validator("workdir_config", default=lambda config, _validator: str(Path(config.workdir) / DEFAULT_CONFIG_FILENAME), cast=cast_expand_path_no_verify),
+    Validator("workdir_snap_state_meta", default=lambda config, _validator: str(Path(config.workdir) / WORKDIR_SNAPSHOT_DIRNAME / DEFAULT_CONFIG_SNAPSHOT_META_FILENAME), cast=cast_expand_path_no_verify)
 )
 
 def update_from_namespace(namespace: Namespace):
@@ -194,5 +200,5 @@ def dump_config():
 def load_config() -> LazySettings:
     """Load an additional configuration file with Dynaconf and returns the settings object"""
     global settings
-    settings.load_file(settings.workdir_config)
+    settings.load_file(settings.workdir_config, silent=False)
     return settings
