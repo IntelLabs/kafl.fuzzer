@@ -13,12 +13,14 @@ Qemu/KVM execution.
 Prepare the kAFL workdir and copy any provided seeds to be picked up by the scheduler.
 """
 
+from contextlib import suppress
 import multiprocessing
 import time
 import os
 import sys
 import logging
 
+import yaml
 from dynaconf import LazySettings
 
 from kafl_fuzzer.common.util import print_banner
@@ -27,6 +29,7 @@ from kafl_fuzzer.common.util import prepare_working_dir, copy_seed_files, qemu_s
 from kafl_fuzzer.common.logger import add_logging_file
 from kafl_fuzzer.manager.manager import ManagerTask
 from kafl_fuzzer.worker.worker import worker_loader
+from kafl_fuzzer.common.config.settings import dump_config, INTEL_PT_MAX_RANGES
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +112,21 @@ def start(settings: LazySettings):
         logger.info("Manager exit: " + str(e))
     finally:
         graceful_exit(workers)
+        # parse snapshot/state.yaml if exists and update config dump 
+        with suppress(FileNotFoundError):
+            with open(settings.workdir_snap_state_meta, 'r') as f:
+                logging.debug("Parsing %s", settings.workdir_snap_state_meta)
+                snap_state = yaml.safe_load(f)
+                # update fuzzer config
+                for i in range(INTEL_PT_MAX_RANGES):
+                    if snap_state['processor_trace'][f'pt_ip_filter_configured_{i}']:
+                        # receive list of 2 strings, convert to int, convert to hex string, remove prefix
+                        low,high = [hex(int(x)).replace('0x', '') for x in snap_state['processor_trace'][f'pt_ip_filter_{i}']]
+                        # convert to kafl IP settings format
+                        settings[f'ip{i}'] = f'{low}-{high}'
+                        logging.debug("Updating IP%s: %s", i, settings[f'ip{i}'])
+            # dump config again
+            dump_config()
 
     time.sleep(1)
     qemu_sweep("Detected potential qemu zombies, try to kill -9:")

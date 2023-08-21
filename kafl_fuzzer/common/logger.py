@@ -9,7 +9,6 @@ import logging
 from logging import LoggerAdapter
 from pathlib import Path
 from logging.config import dictConfig
-from pprint import pformat
 
 import kafl_fuzzer
 
@@ -67,8 +66,5 @@ def add_logging_file(config: LazySettings):
         LOGGING_CONFIG['root']['handlers'].append('file')
         # configure logging
         dictConfig(LOGGING_CONFIG)
-    # dump final logger config
-    logging.debug('Logger configuration:')
-    logging.debug(pformat(LOGGING_CONFIG))
 
 load_logging_config()

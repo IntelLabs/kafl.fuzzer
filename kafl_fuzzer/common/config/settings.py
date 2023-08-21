@@ -20,6 +20,9 @@ VALID_DEBUG_ACTIONS = ["benchmark", "gdb", "trace", "single", "trace-qemu", "noi
 
 # default internal to kAFL
 DEFAULT_CONFIG_FILENAME = "config.yaml"
+WORKDIR_SNAPSHOT_DIRNAME = "snapshot"
+DEFAULT_CONFIG_SNAPSHOT_META_FILENAME = "state.yaml"
+INTEL_PT_MAX_RANGES = 4
 APPDIRS = AppDirs(APPNAME)
 
 
@@ -67,6 +70,9 @@ def cast_ip_range_to_list(parameter: Any) -> Optional[List[int]]:
     """Checks that a given IP range string is valid and returns a List of that range"""
     if parameter is None:
         return None
+    if isinstance(parameter, list):
+        # revalidation triggered, already a list
+        return parameter
     m = re.match(r"([(0-9abcdef]{1,16})(?:-([0-9abcdef]{1,16}))?$", parameter.replace("0x", "").lower())
     if not m:
         raise ValueError(f"{parameter}: invalid range specified: not a number")
@@ -92,7 +98,9 @@ def cast_expand_path_no_verify(parameter: Any) -> Optional[str]:
     if parameter is empty:
         return parameter
     exp_str = os.path.expandvars(parameter)
-    return exp_str
+    # ensure absolute path
+    abs_path = Path(exp_str).resolve()
+    return str(abs_path)
 
 # register validators
 settings.validators.register(
@@ -162,7 +170,8 @@ settings.validators.register(
     # mcat
     Validator("pack_file"),
     # internal for kAFL
-    Validator("workdir_config", default=lambda config, _validator: str(Path(config.workdir) / DEFAULT_CONFIG_FILENAME), cast=cast_expand_path_no_verify)
+    Validator("workdir_config", default=lambda config, _validator: str(Path(config.workdir) / DEFAULT_CONFIG_FILENAME), cast=cast_expand_path_no_verify),
+    Validator("workdir_snap_state_meta", default=lambda config, _validator: str(Path(config.workdir) / WORKDIR_SNAPSHOT_DIRNAME / DEFAULT_CONFIG_SNAPSHOT_META_FILENAME), cast=cast_expand_path_no_verify)
 )
 
 def update_from_namespace(namespace: Namespace):
@@ -191,8 +200,14 @@ def dump_config():
     # dump to a file, format is infered by file extension
     loaders.write(settings.workdir_config, DynaBox(config).to_dict())
 
-def load_config() -> LazySettings:
-    """Load an additional configuration file with Dynaconf and returns the settings object"""
+def load_config(keys: Optional[List[str]]) -> LazySettings:
+    """Load an additional configuration file with Dynaconf and returns the settings object
+    
+    keys: only load the specified keys"""
     global settings
-    settings.load_file(settings.workdir_config)
+    if keys is None:
+        settings.load_file(settings.workdir_config, silent=False, validate=True)
+    else:
+        for k in keys:
+            settings.load_file(settings.workdir_config, key=k, silent=False, validate=True)
     return settings

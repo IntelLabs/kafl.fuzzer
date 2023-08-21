@@ -24,6 +24,7 @@ from kafl_fuzzer.worker.execution_result import ExecutionResult
 from kafl_fuzzer.worker.qemu_aux_buffer import QemuAuxBuffer
 from kafl_fuzzer.worker.qemu_aux_buffer import QemuAuxRC as RC
 from kafl_fuzzer.common.logger import WorkerLogAdapter
+from kafl_fuzzer.common.config.settings import INTEL_PT_MAX_RANGES
 
 class QemuIOException(Exception):
         """Exception raised when Qemu interaction fails"""
@@ -92,11 +93,10 @@ class qemu:
         if self.config.sharedir:
             self.cmd += ",sharedir=" + self.config.sharedir
 
-        for i in range(4):
-            key = "ip" + str(i)
-            if getattr(config, key, None):
-                range_a = hex(getattr(config, key)[0]).replace("L", "")
-                range_b = hex(getattr(config, key)[1]).replace("L", "")
+        for i in range(INTEL_PT_MAX_RANGES):
+            if self.config[f"ip{i}"]:
+                range_a = hex(self.config[f"ip{i}"][0]).replace("L", "")
+                range_b = hex(self.config[f"ip{i}"][1]).replace("L", "")
                 self.cmd += ",ip" + str(i) + "_a=" + range_a + ",ip" + str(i) + "_b=" + range_b
 
         self.cmd = [_f for _f in self.cmd.split(" ") if _f]
