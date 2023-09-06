@@ -147,7 +147,6 @@ def add_args_qemu(parser):
 def add_args_debug(parser):
     parser.add_argument('--input', metavar='<file/dir>', help='path to input file or workdir.')
     parser.add_argument('-n', '--iterations', metavar='<n>', help='execute <n> times (for some actions)')
-    parser.add_argument('--action', required=False, metavar='<cmd>', help=DEBUG_MODES_HELP)
     parser.add_argument('--ptdump-path', required=False, metavar='<file>', help=hidden('path to ptdump executable'))
 
 
@@ -191,6 +190,8 @@ class ConfigParserBuilder():
 
         debug_grp = debug_subcommand.add_argument_group("Debug options")
         add_args_debug(debug_grp)
+        # add "action" argument, only for "debug" subcommand
+        debug_grp.add_argument('--action', required=True, metavar='<cmd>', help=DEBUG_MODES_HELP)
 
         qemu_grp = debug_subcommand.add_argument_group('Qemu/Nyx options')
         add_args_qemu(qemu_grp)
