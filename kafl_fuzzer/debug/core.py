@@ -440,7 +440,7 @@ def start(settings: LazySettings):
 
     if not prepare_working_dir(settings):
         logger.error("Failed to prepare working directory. Exit.")
-        return -1;
+        return -1
 
     # initialize logger after workdir purge
     # otherwise the file handler created is removed
