@@ -10,6 +10,7 @@ import tempfile
 import string
 import logging
 from shutil import copyfile
+from typing import Optional, Tuple
 
 import psutil
 
@@ -78,16 +79,16 @@ def atomic_write(filename, data):
     os.chmod(f.name, 0o644)
     os.rename(f.name, filename)
 
-def read_binary_file(filename):
+def read_binary_file(filename) -> bytes:
     with open(filename, 'rb') as f:
         return f.read()
 
-def find_diffs(data_a, data_b):
-    first_diff = 0
-    last_diff = 0
+def find_diffs(data_a: bytes, data_b: bytes) -> Tuple[Optional[int], Optional[int]]:
+    first_diff = None
+    last_diff = None
     for i in range(min(len(data_a), len(data_b))):
-        if data_a[i] != data_b:
-            if first_diff == 0:
+        if data_a[i] != data_b[i]:
+            if first_diff is None:
                 first_diff = i
             last_diff = i
     return first_diff, last_diff

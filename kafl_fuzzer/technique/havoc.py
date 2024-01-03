@@ -61,7 +61,7 @@ def mutate_seq_havoc_array(data, func, max_iterations, resize=False):
             data = handler(data)[:KAFL_MAX_FILE]
             func(data)
 
-def mutate_seq_splice_array(data, func, max_iterations, resize=False):
+def mutate_seq_splice_array(data: bytes, func, max_iterations, resize=False):
     global location_corpus
     havoc_rounds = 4
     splice_rounds = max_iterations//havoc_rounds

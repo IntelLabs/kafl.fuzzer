@@ -92,7 +92,7 @@ class FuzzingStateLogic:
         self.init_stage_info(metadata)
         self.handle_kickstart(kick_len, metadata)
 
-    def process_node(self, payload, metadata):
+    def process_node(self, payload: bytes, metadata):
         self.init_stage_info(metadata)
 
         if metadata["state"]["name"] == "initial":
@@ -263,7 +263,7 @@ class FuzzingStateLogic:
             self.__perform_redqueen(payload, metadata)
         self.redqueen_time += time.time() - redqueen_start_time
 
-    def handle_havoc(self, payload, metadata):
+    def handle_havoc(self, payload: bytes, metadata):
         havoc_afl = True
         havoc_splice = True
         havoc_radamsa = self.config.radamsa
@@ -499,7 +499,7 @@ class FuzzingStateLogic:
         self.stage_update_label("radamsa")
         radamsa.mutate_seq_radamsa_array(payload_array, self.execute, radamsa_amount)
 
-    def __perform_havoc(self, payload_array, metadata, use_splicing):
+    def __perform_havoc(self, payload_array: bytes, metadata, use_splicing):
         perf = metadata["performance"]
         havoc_amount = havoc.havoc_range(self.HAVOC_MULTIPLIER / perf)
 
