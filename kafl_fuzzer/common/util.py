@@ -86,7 +86,7 @@ def find_diffs(data_a: bytes, data_b: bytes):
     first_diff = 0
     last_diff = 0
     for i in range(min(len(data_a), len(data_b))):
-        if data_a[i] != data_b:
+        if data_a[i] != data_b[i]:
             if first_diff == 0:
                 first_diff = i
             last_diff = i
