@@ -34,11 +34,11 @@ class QueueNode:
         self.set_state("initial", write=False)
 
     @staticmethod
-    def get_metadata(workdir, node_id):
+    def get_metadata(workdir, node_id) -> bytes:
         return msgpack.unpackb(read_binary_file(QueueNode.__get_metadata_filename(workdir, node_id)), strict_map_key=False)
 
     @staticmethod
-    def get_payload(workdir, node_struct):
+    def get_payload(workdir, node_struct) -> bytes:
         return read_binary_file(QueueNode.__get_payload_filename(workdir, node_struct['info']['exit_reason'], node_struct['id']))
 
     @staticmethod

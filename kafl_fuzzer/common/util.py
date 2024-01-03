@@ -78,11 +78,11 @@ def atomic_write(filename, data):
     os.chmod(f.name, 0o644)
     os.rename(f.name, filename)
 
-def read_binary_file(filename):
+def read_binary_file(filename) -> bytes:
     with open(filename, 'rb') as f:
         return f.read()
 
-def find_diffs(data_a, data_b):
+def find_diffs(data_a: bytes, data_b: bytes):
     first_diff = 0
     last_diff = 0
     for i in range(min(len(data_a), len(data_b))):

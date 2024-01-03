@@ -81,8 +81,8 @@ class WorkerTask:
         self.conn.send_ready()
 
     def handle_node(self, msg):
-        meta_data = QueueNode.get_metadata(self.config.workdir, msg["task"]["nid"])
-        payload = QueueNode.get_payload(self.config.workdir, meta_data)
+        meta_data: bytes = QueueNode.get_metadata(self.config.workdir, msg["task"]["nid"])
+        payload: bytes = QueueNode.get_payload(self.config.workdir, meta_data)
 
         # fixme: determine globally based on all seen regulars
         t_dyn = self.t_soft + 1.2 * meta_data["info"]["performance"]

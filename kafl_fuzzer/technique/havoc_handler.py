@@ -220,7 +220,7 @@ def havoc_perform_byte_seq_extra2(data):
     pass
 
 
-def havoc_splicing(data, files):
+def havoc_splicing(data: bytes, files):
     if len(data) < 2 or files is None:
         return data
 
@@ -228,7 +228,7 @@ def havoc_splicing(data, files):
     retry_limit = 64
 
     for file in files[:retry_limit]:
-        file_data = read_binary_file(file)
+        file_data: bytes = read_binary_file(file)
         if len(file_data) < 2:
             continue
 
