@@ -32,6 +32,7 @@ class QemuIOException(Exception):
 
 class qemu:
     payload_header_size = 4 # must correspond to set_payload() and nyx_api.h
+    page_size = 4096
 
 
     def __init__(self, pid, config, debug_mode=False, notifiers=True, resume=False):
@@ -40,7 +41,7 @@ class qemu:
         self.ijonmap_size = 0x1000 # quick fix - bitmaps are not processed!
         self.bitmap_size = config.bitmap_size
         self.payload_size = config.payload_size
-        self.payload_limit = config.payload_size - qemu.payload_header_size
+        self.payload_size_aligned = ((config.payload_size + qemu.payload_header_size + qemu.page_size - 1) // qemu.page_size) * qemu.page_size
         self.config = config
         self.pid = pid
         self.alt_bitmap = bytearray(self.bitmap_size)
@@ -82,7 +83,7 @@ class qemu:
                     ",workdir=" + workdir + \
                     ",worker_id=%d" % self.pid + \
                     ",bitmap_size=" + str(self.bitmap_size) + \
-                    ",input_buffer_size=" + str(self.payload_size)
+                    ",input_buffer_size=" + str(self.payload_size_aligned)
 
         if self.config.trace:
             self.cmd += ",dump_pt_trace"
@@ -236,7 +237,7 @@ class qemu:
 
         os.ftruncate(self.ijon_shm_f, self.ijonmap_size)
         os.ftruncate(self.kafl_shm_f, self.bitmap_size)
-        os.ftruncate(self.fs_shm_f, self.payload_size)
+        os.ftruncate(self.fs_shm_f, self.payload_size_aligned)
 
         if self.pid not in [0, 1337]:
             final_cmdline = ""
@@ -312,7 +313,7 @@ class qemu:
             self.run_qemu()
 
         # Qemu tends to truncate / resize the files. Not sure why..
-        assert(self.payload_size == os.path.getsize(self.payload_filename))
+        assert(self.payload_size_aligned == os.path.getsize(self.payload_filename))
         assert(self.bitmap_size == os.path.getsize(self.bitmap_filename))
         assert(self.ijonmap_size == os.path.getsize(self.ijonmap_filename))
         self.kafl_shm = mmap.mmap(self.kafl_shm_f, 0)
@@ -518,16 +519,16 @@ class qemu:
         assert(self.qemu_aux_buffer)
         self.qemu_aux_buffer.set_trace_mode(enable)
 
-    def get_payload_limit(self):
-        return self.payload_limit
+    def get_payload_size(self):
+        return self.payload_size
 
     def set_payload(self, payload):
         # Ensure the payload fits into SHM. Caller has to cut off since they also report findings.
-        # actual payload is limited to payload_size - sizeof(uint32) - sizeof(uint8)
-        assert(len(payload) <= self.payload_limit), "Payload size %d > SHM limit %d. Check size/shm config" % (len(payload),self.payload_limit)
+        # actual payload is limited to payload_size
+        assert(len(payload) <= self.payload_size), "Payload size %d > SHM limit %d. Check size/shm config" % (len(payload),self.payload_size)
 
-        #if len(payload) > self.payload_limit:
-        #    payload = payload[:self.payload_limit]
+        #if len(payload) > self.payload_size:
+        #    payload = payload[:self.payload_size]
         try:
             struct.pack_into("=I", self.fs_shm, 0, len(payload))
             self.fs_shm.seek(4)

@@ -49,7 +49,7 @@ class WorkerTask:
         self.logic = FuzzingStateLogic(self, config)
         self.bitmap_storage = BitmapStorage(self.config, "main")
 
-        self.payload_limit = self.q.get_payload_limit()
+        self.payload_size = self.q.get_payload_size()
         self.t_hard = config.timeout_hard
         self.t_soft = config.timeout_soft
         self.t_check = config.timeout_check
@@ -264,8 +264,8 @@ class WorkerTask:
 
         self.logger.info("Tracing payload_%05d..", info['id'])
 
-        if len(data) > self.payload_limit:
-            data = data[:self.payload_limit]
+        if len(data) > self.payload_size:
+            data = data[:self.payload_size]
 
         try:
             self.q.set_payload(data)
@@ -300,8 +300,8 @@ class WorkerTask:
 
     def execute_naked(self, data, timeout=None):
 
-        if len(data) > self.payload_limit:
-            data = data[:self.payload_limit]
+        if len(data) > self.payload_size:
+            data = data[:self.payload_size]
 
         if timeout:
             old_timeout = self.q.get_timeout()
@@ -342,8 +342,8 @@ class WorkerTask:
 
     def execute(self, data, info, hard_timeout=False):
 
-        if len(data) > self.payload_limit:
-            data = data[:self.payload_limit]
+        if len(data) > self.payload_size:
+            data = data[:self.payload_size]
 
         exec_res = self.__execute(data)
 
