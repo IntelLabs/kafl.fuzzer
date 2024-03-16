@@ -124,9 +124,9 @@ def execute_once(config, qemu_verbose=False, notifiers=True):
 
     payload = read_binary_file(payload_file)
 
-    payload_limit = q.get_payload_limit()
-    if len(payload) > payload_limit:
-        payload = payload[:payload_limit]
+    payload_size = q.get_payload_size()
+    if len(payload) > payload_size:
+        payload = payload[:payload_size]
 
     q.set_payload(payload)
     result = q.send_payload()
@@ -155,10 +155,10 @@ def debug_execution(config, execs, qemu_verbose=False, notifiers=True):
     assert q.start(), "Failed to start Qemu?"
 
     payload = read_binary_file(payload_file)
-    payload_limit = q.get_payload_limit()
+    payload_size = q.get_payload_size()
 
-    if len(payload) > payload_limit:
-        payload = payload[:payload_limit]
+    if len(payload) > payload_size:
+        payload = payload[:payload_size]
 
     start = time.time()
     for i in range(execs):
@@ -202,10 +202,10 @@ def debug_non_det(config, max_execs=0):
 
     q.set_timeout(0)
 
-    payload_limit = q.get_payload_limit()
+    payload_size = q.get_payload_size()
 
-    if len(payload) > payload_limit:
-        payload = payload[:payload_limit]
+    if len(payload) > payload_size:
+        payload = payload[:payload_size]
 
     hash_value = None
     first_hash = None
