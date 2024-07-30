@@ -6,7 +6,7 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 setup(name='kafl_fuzzer',
-      version='0.6',
+      version='0.6.1',
       description='kAFL/Nyx Kernel Fuzzer',
       maintainer='Steffen Schulz',
       maintainer_email='steffen.schulz@intel.com',
