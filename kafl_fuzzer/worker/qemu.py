@@ -122,6 +122,8 @@ class qemu:
             self.cmd.extend(["-drive", "file=" + self.config.qemu_image])
         if self.config.qemu_kernel:
             self.cmd.extend(["-kernel", self.config.qemu_kernel])
+            if self.config.qemu_append is None:
+                self.config.qemu_append = self.config.qemu_append_default
             if self.config.qemu_initrd:
                 self.cmd.extend(["-initrd", self.config.qemu_initrd])
         if self.config.qemu_bios:

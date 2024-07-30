@@ -140,6 +140,7 @@ settings.validators.register(
     Validator("qemu_bios", default=None, cast=cast_expand_path),
     Validator("qemu_kernel", default=None, cast=cast_expand_path),
     Validator("qemu_initrd", default=None, cast=cast_expand_path),
+    Validator("qemu_append_default", default=None),
     Validator("qemu_append", default=None),
     Validator("qemu_memory", cast=int),
     Validator("qemu_base"),
