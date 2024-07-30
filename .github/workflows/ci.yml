@@ -25,6 +25,8 @@ jobs:
     # this job makes an official Github release
     needs: [lint]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       version: ${{ steps.get_version.outputs.version }}
       upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
