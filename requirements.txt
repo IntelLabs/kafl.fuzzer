@@ -8,4 +8,4 @@ tqdm
 six
 dynaconf==3.2.0
 appdirs
-PyYAML==6.0
+PyYAML==6.0.2
