@@ -78,7 +78,7 @@ class ManagerTask:
         self.busy_events +=1
         if self.busy_events >= self.config.processes:
             self.busy_events = 0
-            main_bitmap = self.bitmap_storage.get_bitmap_for_node_type("regular").c_bitmap
+            main_bitmap = bytes(self.bitmap_storage.get_bitmap_for_node_type("regular").c_bitmap)
             if mmh3.hash(main_bitmap) == self.empty_hash:
                 logger.warn("Coverage bitmap is empty?! Check -ip0 or try better seeds.")
 
