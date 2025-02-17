@@ -10,9 +10,9 @@ to launch some benchmarks contained there.
 To execute all regular tests, run pytest inside kAFL-Fuzzer/ directory.
 """
 
-from tests.test_random import *
-from tests.test_deterministic import *
-from tests.test_havoc_handler import *
+from tests.test_random import rand_main
+from tests.test_deterministic import deter_main
+from tests.test_havoc_handler import havoc_main
 
 if __name__ == '__main__':
 

@@ -62,8 +62,8 @@ def benchmark(config):
 
         #logger.info("Calibrate to run at %d execs/s..." % iterations)
         rounds = 0
-        runtime = 0
-        total = 0
+        runtime: float = 0
+        total: float = 0
         while True:
             start = time.time()
             for _ in range(int(REFRESH*iterations)):
@@ -226,7 +226,7 @@ def debug_non_det(config, max_execs=0):
                     os.path.basename(payload_file),
                     first_hash)
 
-        total = 0
+        total: float = 0
         iterations = 1
         hash_mismatch = 0
         time.sleep(delay)
@@ -254,7 +254,7 @@ def debug_non_det(config, max_execs=0):
                     hashes[hash_value] = 1
                     store_traces(config, qid,
                                  os.path.basename(payload_file),
-                                 current_hash)
+                                 current_hash) # type: ignore
                 if hash_value != first_hash:
                     hash_mismatch += 1
                 execs += 1
@@ -334,7 +334,7 @@ def redqueen_dbg(config, qemu_verbose=False):
 
     thread = Thread(target=lambda: redqueen_dbg_thread(q))
     thread.start()
-    result = q.execute_in_redqueen_mode(payload, debug_mode=True)
+    result = q.execute_in_redqueen_mode(payload, debug_mode=True) # type: ignore
     thread_done = True
     thread.join()
     requeen_print_state(q)
@@ -365,7 +365,7 @@ def verify_dbg(config, qemu_verbose=False):
 
     logger.info("Starting...")
 
-    rq_state = RedqueenState()
+    rq_state = RedqueenState() # type: ignore
 
     if os.path.exists("patches"):
         with open("patches", "r") as f:
@@ -394,17 +394,17 @@ def verify_dbg(config, qemu_verbose=False):
                 p.write(addr)
 
     logger.info("RUN WITH PATCHING:")
-    bmp1 = q.send_payload(apply_patches=True)
+    bmp1 = q.send_payload(apply_patches=True) # type: ignore
 
     logger.info("\nNOT PATCHING:")
-    bmp2 = q.send_payload(apply_patches=False)
+    bmp2 = q.send_payload(apply_patches=False) # type: ignore
 
     if bmp1 == bmp2:
         logger.warn("Patches don't seem to change anything, are checksums present?")
     else:
         logger.info("OK: bitmaps are distinct")
 
-    q.soft_reload()
+    q.soft_reload() # type: ignore
 
     hash = HashFixer(q, rq_state)
 
@@ -416,7 +416,7 @@ def verify_dbg(config, qemu_verbose=False):
 
         q.set_payload(fixed_payload)
 
-        bmp3 = q.send_payload(apply_patches=False)
+        bmp3 = q.send_payload(apply_patches=False) # type: ignore
 
         if bmp1 == bmp3:
             logger.info("CONGRATZ, BITMAPS ARE THE SAME, all cmps fixed\n")

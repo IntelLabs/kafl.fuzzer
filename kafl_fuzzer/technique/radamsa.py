@@ -18,6 +18,9 @@ from kafl_fuzzer.common.util import read_binary_file
 from kafl_fuzzer.technique.helper import KAFL_MAX_FILE
 
 logger = logging.getLogger(__name__)
+corpus_dir = None
+input_dir = None
+radamsa_path = None
 
 def init_radamsa(config, pid):
     global corpus_dir
@@ -35,6 +38,10 @@ def perform_radamsa_round(data, func, num_inputs):
     global corpus_dir
     global input_dir
     global radamsa_path
+
+    assert corpus_dir
+    assert input_dir
+    assert radamsa_path
 
     last_n = 10
     rand_n = 40

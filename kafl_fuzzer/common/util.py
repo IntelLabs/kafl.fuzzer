@@ -10,7 +10,7 @@ import tempfile
 import string
 import logging
 from shutil import copyfile
-from typing import Optional, Tuple
+from typing import Tuple, Any, Dict
 
 import psutil
 
@@ -19,7 +19,7 @@ import kafl_fuzzer.common.color as color
 logger = logging.getLogger(__name__)
 
 class Singleton(type):
-    _instances = {}
+    _instances: Dict[type, Any] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
@@ -83,7 +83,7 @@ def read_binary_file(filename) -> bytes:
     with open(filename, 'rb') as f:
         return f.read()
 
-def find_diffs(data_a: bytes, data_b: bytes) -> Tuple[Optional[int], Optional[int]]:
+def find_diffs(data_a: bytes, data_b: bytes) -> Tuple[int, int]:
     first_diff = 0
     last_diff = 0
     for i in range(min(len(data_a), len(data_b))):

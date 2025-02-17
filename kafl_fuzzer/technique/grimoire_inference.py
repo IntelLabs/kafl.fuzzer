@@ -10,6 +10,7 @@ Grimoire Grammar Inference (analysis/inference stage)
 import re
 
 from collections import OrderedDict
+from typing import List
 from six.moves import map
 
 class GrimoireInference:
@@ -39,10 +40,10 @@ class GrimoireInference:
         for l in open(path):
             if not l.startswith("#"):
                 try:
-                    s = (l.split("=\"")[1].split("\"\n")[0]).decode("string_escape")
+                    s = (l.split("=\"")[1].split("\"\n")[0])
                     if s == "":
                         continue
-                    self.tokens[tuple([c for c in s])] = 0
+                    self.tokens[tuple([c.encode() for c in s])] = 0
                     strings.append(s)
                 except:
                     pass
@@ -72,7 +73,7 @@ class GrimoireInference:
             before = char_class
         return ret
 
-    def find_gaps(self, payload, old_node, find_next_index, split_char):
+    def find_gaps(self, payload: List[bytes], old_node, find_next_index, split_char):
         index = 0
         while index < len(payload):
             resume_index = find_next_index(payload, index, split_char)

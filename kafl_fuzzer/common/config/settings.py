@@ -96,7 +96,7 @@ def cast_expand_path(parameter: Any) -> Optional[str]:
 
 def cast_expand_path_no_verify(parameter: Any) -> Optional[str]:
     if parameter is empty:
-        return parameter
+        return None
     exp_str = os.path.expandvars(parameter)
     # ensure absolute path
     abs_path = Path(exp_str).resolve()

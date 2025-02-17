@@ -10,6 +10,7 @@ Redqueen Input Analysis
 import itertools
 import struct
 import logging
+from typing import Any, List, Set
 
 from kafl_fuzzer.technique import havoc_handler
 from .encoding import Encoders
@@ -73,7 +74,7 @@ class Cmp:
         elif SKIP_SIMPLE:
             unpack_keys = {1: "B", 2: "H", 4: "L", 8: "Q"}
             num_bytes = int(self.size / 8)
-            key = unpack_keys.get(num_bytes, None)
+            key = unpack_keys[num_bytes]
             ilhs = struct.unpack(">" + key, lhs)[0]
             irhs = struct.unpack(">" + key, rhs)[0]
             if abs(ilhs - irhs) < AFL_ARITH_MAX:
@@ -176,7 +177,7 @@ class CmpEncoded:
         return self.all_valid_offsets
 
     def get_offset_union_tuple(self, run_info):
-        union_tuple = [set() for _ in range(self.enc.size())]
+        union_tuple: List[Set[Any]] = [set() for _ in range(self.enc.size())]
         set_of_lhs = set()
         for (lhs, rhs) in self.cmp.run_info_to_pairs[run_info]:
             set_of_lhs.add(lhs)
@@ -217,7 +218,7 @@ class CmpEncoded:
         res = [tuple(self.__get_encoded(rhs))]
         unpack_keys = {1: "B", 2: "H", 4: "L", 8: "Q"}
         bytes = self.cmp.size / 8
-        key = unpack_keys.get(bytes, None)
+        key = unpack_keys[bytes]
         max = int(2 ** (8 * bytes) - 1)
         val = struct.unpack(">" + key, rhs)[0]
         max_offset = 1
@@ -232,7 +233,7 @@ class CmpEncoded:
         res = []
         unpack_keys = {1: "B", 2: "H", 4: "L", 8: "Q"}
         bytes = self.cmp.size / 8
-        key = unpack_keys.get(bytes, None)
+        key = unpack_keys[bytes]
         max = int(2 ** (8 * bytes) - 1)
         val = struct.unpack(">" + key, rhs)[0]
         for i in range(-16, 16):
@@ -277,7 +278,3 @@ class CmpEncoded:
         if len(mutations) > 0 and len(mutations) < 256:
             return True
         return self.occured_in_all_run_infos
-
-    def could_be_hash(self):
-        always_found = len(self.run_infos_where_not_all_found) == 0
-        return always_found and self.cmp._could_be_hash()

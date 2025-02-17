@@ -12,6 +12,8 @@ import glob
 from kafl_fuzzer.common.rand import rand
 from kafl_fuzzer.technique.havoc_handler import *
 
+location_corpus = None
+
 
 def load_dict(file_name):
     f = open(file_name)
@@ -63,6 +65,7 @@ def mutate_seq_havoc_array(data, func, max_iterations, resize=False):
 
 def mutate_seq_splice_array(data: bytes, func, max_iterations, resize=False):
     global location_corpus
+    assert location_corpus
     havoc_rounds = 4
     splice_rounds = max_iterations//havoc_rounds
     files = glob.glob(location_corpus + "/regular/payload_*")

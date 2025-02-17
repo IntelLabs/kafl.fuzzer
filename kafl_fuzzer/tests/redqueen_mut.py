@@ -31,5 +31,4 @@ def fake_execute(str, a, b):
 
 
 info.verbose = True
-default_info = {}
-info.run_mutate_redqueen(array.array("B", orig_input), fake_execute, default_info)
+info.run_mutate_redqueen(array.array("B", orig_input), fake_execute)

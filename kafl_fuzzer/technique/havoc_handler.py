@@ -8,6 +8,7 @@ AFL-style havoc mutations (havoc stage)
 """
 
 import logging
+from typing import Dict, List, Set
 from kafl_fuzzer.common.rand import rand
 from kafl_fuzzer.common.util import read_binary_file, find_diffs
 from kafl_fuzzer.technique.helper import *
@@ -243,13 +244,11 @@ def havoc_splicing(data: bytes, files):
     return None
 
 
-dict_set = set()
 dict_import = []
 
-redqueen_dict = {}
-redqueen_addr_list = []
-redqueen_known_addrs = set()
-redqueen_seen_addr_to_value = {}
+redqueen_dict: Dict[int, Set[bytes]] = {}
+redqueen_addr_list: List[int] = []
+redqueen_seen_addr_to_value: Dict[int, bytes] = {}
 
 
 def set_dict(new_dict):
@@ -274,7 +273,7 @@ def get_redqueen_seen_addr_to_value():
     return redqueen_seen_addr_to_value
 
 
-def add_to_redqueen_dict(addr, val):
+def add_to_redqueen_dict(addr: int, val: bytes):
     global redqueen_dict, redqueen_addr_list
 
     assert len(redqueen_dict) == len(redqueen_addr_list)

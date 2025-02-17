@@ -6,11 +6,10 @@
 import mmap
 import os
 import struct
+import logging
 
 from collections import namedtuple
 from enum import IntEnum
-
-from kafl_fuzzer.common import logger
 
 
 result_tuple = namedtuple('result_tuple', [
@@ -61,6 +60,7 @@ class QemuAuxRC(IntEnum):
 class QemuAuxBuffer:
 
     def __init__(self, file):
+        self.logger = logging.getLogger(__name__)
         self.aux_buffer_fd = os.open(file, os.O_RDWR | os.O_SYNC)
         self.aux_buffer = mmap.mmap(self.aux_buffer_fd, 0x1000, mmap.MAP_SHARED, mmap.PROT_WRITE | mmap.PROT_READ) # fix this later
         self.current_timeout = None
@@ -71,15 +71,15 @@ class QemuAuxBuffer:
         qemu_hash = (struct.unpack('H', self.aux_buffer[10:12])[0])
 
         if qemu_magic != my_magic:
-            logger.error("Magic mismatch: %x != %x" % (qemu_magic, my_magic))
+            self.logger.error("Magic mismatch: %x != %x" % (qemu_magic, my_magic))
             return False
 
         if qemu_version != my_version:
-            logger.error("Version mismatch: %x != %x" % (qemu_version, my_version))
+            self.logger.error("Version mismatch: %x != %x" % (qemu_version, my_version))
             return False 
 
         if qemu_hash != my_hash:
-            logger.error("Hash mismatch: %x != %x" % (qemu_hash, my_hash))
+            self.logger.error("Hash mismatch: %x != %x" % (qemu_hash, my_hash))
             return False
 
         return True

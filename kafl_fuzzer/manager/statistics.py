@@ -17,12 +17,12 @@ from kafl_fuzzer.common.color import FLUSH_LINE, FAIL, OKBLUE, ENDC
 class ManagerStatistics:
     def __init__(self, config):
         self.execs_last = 0
-        self.execs_time = 0
-        self.plot_last = 0
+        self.execs_time: float = 0
+        self.plot_last: float = 0
         self.plot_thres = 5
-        self.stat_last = 0
+        self.stat_last: float = 0
         self.stat_thres = 60*60
-        self.write_last = 0
+        self.write_last: float = 0
         self.write_thres = 0.5
         self.quiet = config.quiet
         self.num_workers = config.processes
@@ -246,7 +246,7 @@ class ManagerStatistics:
 class WorkerStatistics:
     def __init__(self, pid, config):
         self.filename = "%s/worker_stats_%d" % (config.workdir, pid)
-        self.write_last = 0
+        self.write_last: float = 0
         self.write_thres = 0.5
         self.execs_new = 0
         self.data = {

@@ -67,6 +67,7 @@ class ExecutionResult:
 
     def apply_lut(self):
         if not self.lut_applied:
+            assert ExecutionResult.bitmap_native_so
             ExecutionResult.bitmap_native_so.apply_bucket_lut(self.cbuffer, ctypes.c_uint64(self.bitmap_size))
             self.lut_applied = True
         return self

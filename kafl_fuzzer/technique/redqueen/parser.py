@@ -8,9 +8,10 @@ Redqueen trace parser (inference stage)
 """
 
 import re
+import logging
 from binascii import unhexlify
+from typing import Any, Dict, Set, Tuple
 
-from kafl_fuzzer.common import logger
 from kafl_fuzzer.common.util import read_binary_file
 from .cmp import Cmp
 
@@ -21,11 +22,11 @@ def read_file(path):
 
 
 class RedqueenRunInfo:
-    def __init__(self, id, was_colored, hook_info, input_data):
+    def __init__(self, id, was_colored, hook_info, input_data: bytes):
         self.id = id
         self.hook_info = hook_info
         self.input_data = input_data
-        self.pattern_to_offsets = {}
+        self.pattern_to_offsets: Dict[Tuple[Any], Set[int]] = {}
         self.was_colored = was_colored
 
     def get_offset_tuple(self, pattern_tuple):
@@ -38,7 +39,7 @@ class RedqueenRunInfo:
         return set(self.pattern_to_offsets[pattern])
 
     def calc_offsets(self, pattern):
-        res = set()
+        res: Set[int] = set()
         start = 0
         if isinstance(pattern, str):
             # TODO: Find source of str type inputs to avoid this check + conversion
@@ -53,6 +54,7 @@ class RedqueenRunInfo:
 
 class RedqueenInfo:
     def __init__(self):
+        self.logger = logging.getLogger(__name__)
         self.addr_to_cmp = {}
         self.addr_to_inv_cmp = {}
         self.run_infos = set()
@@ -63,7 +65,7 @@ class RedqueenInfo:
         bin_info = read_binary_file("%s/input_%d.bin" % (path, input_id))
         return self.load_data(input_id, was_colored, hook_info, bin_info)
 
-    def load_data(self, input_id, was_colored, hook_info, bin_info):
+    def load_data(self, input_id, was_colored, hook_info, bin_info: bytes):
         run_info = RedqueenRunInfo(input_id, was_colored, hook_info, bin_info)
         self.run_infos.add(run_info)
         self.parse_run_info(run_info)
@@ -107,13 +109,13 @@ class RedqueenInfo:
 
     def get_all_mutations(self):
         self.boring_cmps = set()
-        offsets_to_lhs_to_rhs_to_info = {}
+        offsets_to_lhs_to_rhs_to_info: Dict[Tuple[Any], Any] = {}
         num_mut = 0
 
         orig_run_info = [r for r in self.run_infos if not r.was_colored]
         #assert (len(orig_run_info) == 1)
         if len(orig_run_info) != 1:
-            logger.warn("Warning: Could not find canonical orig. run info! len(info)=%d" % len(orig_run_info))
+            self.logger.warning("Warning: Could not find canonical orig. run info! len(info)=%d" % len(orig_run_info))
             return num_mut, offsets_to_lhs_to_rhs_to_info    
 
         orig_run_info = orig_run_info[0]

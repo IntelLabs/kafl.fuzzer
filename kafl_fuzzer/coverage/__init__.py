@@ -25,6 +25,7 @@ import subprocess
 import tempfile
 import logging
 from operator import itemgetter
+from typing import Any, Dict, Set
 from dynaconf import LazySettings
 
 import msgpack
@@ -63,7 +64,7 @@ class TraceParser:
         bbs = set()
         edges = dict()
         with lz4.LZ4FrameFile(trace_file, 'rb') as f:
-            for m in re.finditer("([\da-f]+),([\da-f]+)", f.read().decode()):
+            for m in re.finditer(r"([\da-f]+),([\da-f]+)", f.read().decode()):
                 edges["%s,%s" % (m.group(1), m.group(2))] = 1
                 bbs.add(m.group(1))
                 bbs.add(m.group(2))
@@ -84,11 +85,11 @@ class TraceParser:
 
         with mp.Pool(nproc) as pool:
             self.trace_results = zip(timestamps,
-                                     pool.map(TraceParser.parse_trace_file, trace_files))
+                                     pool.map(TraceParser.parse_trace_file, trace_files)) # type: ignore
 
     def coverage_totals(self):
-        unique_bbs = set()
-        unique_edges = dict()
+        unique_bbs: Set[Any] = set()
+        unique_edges: Dict[Any, Any] = dict()
         unique_traces = 0
 
         for _, findings in self.trace_results:
@@ -108,8 +109,8 @@ class TraceParser:
         return unique_edges, unique_bbs
 
     def gen_reports(self):
-        unique_bbs = set()
-        unique_edges = dict()
+        unique_bbs: Set[Any] = set()
+        unique_edges: Dict[Any, Any] = dict()
 
         plot_file = self.trace_dir + "/coverage.csv"
         edges_file = self.trace_dir + "/edges_uniq.lst"
@@ -173,6 +174,7 @@ def afl_workdir_iterator(workdir):
             return
         input_name = os.path.basename(input_file)
         match = re.match(r"id:(0+)(\d+),", input_name)
+        assert match
         input_id = int(match.groups()[1])
         seconds = id_to_time[input_id] - start_time
 
@@ -441,9 +443,9 @@ def funky_trace_run(q, input_path, retry=1):
 
     payload = read_binary_file(input_path)
 
-    hashes = dict()
+    hashes: Dict[Any, Any] = dict()
     for _ in range(validations):
-        res = simple_trace_run(q, payload)
+        res = simple_trace_run(q, payload) # type: ignore
         if not res:
             return None
 
@@ -497,7 +499,7 @@ def start(settings: LazySettings):
     null_hash = ExecutionResult.get_null_hash(settings.bitmap_size)
 
     nproc = min(settings.processes, os.cpu_count())
-    logger.info("Using %d/%d cores..." % (nproc, os.cpu_count()))
+    logger.info("Using %d/%d cores..." % (nproc, os.cpu_count())) # type: ignore
 
     logger.info("Scanning target data_dir »%s«..." % data_dir)
     input_list = get_inputs_by_time(data_dir)

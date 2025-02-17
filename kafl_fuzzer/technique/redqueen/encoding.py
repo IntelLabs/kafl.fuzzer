@@ -7,6 +7,7 @@
 Redqueen Input Encoders
 """
 
+from dataclasses import dataclass
 import struct
 from itertools import product
 
@@ -16,19 +17,19 @@ class Encoding:
         unpack_keys = {1: "B", 2: "H", 4: "L", 8: "Q"}
         key = unpack_keys.get(cmp.size / 8, None)
         if key:
-            if self.signed:
+            if self.signed: # type: ignore
                 return struct.unpack("<" + key.lower(), val)[0]
             else:
                 return struct.unpack("<" + key, val)[0]
         assert False
 
     def apply_reverse(self, val):
-        if self.reverse:
+        if self.reverse: # type: ignore
             return val[::-1]
         return val
 
     def rev_desc(self):
-        if self.reverse:
+        if self.reverse: # type: ignore
             return "r"
         return "p"
 
@@ -275,18 +276,19 @@ Encoders = [ZextEncoding(bytes, reverse) for (bytes, reverse) in product([1, 2, 
 import unittest
 
 
+@dataclass
 class Dummy:
-    pass
+    size: int
+    
 
 
 class TestEncoder(unittest.TestCase):
     def test_applicable(self):
-        a = Dummy()
-        a.size = 32
-        assert (Encoding.is_applicable(a, "p_zext1", "\0\0\0a"))
-        assert (not Encoding.is_applicable(a, "p_zext1", "\0\0ba"))
-        assert (not Encoding.is_applicable(a, "r_zext1", "\0\0\0a"))
-        assert (Encoding.is_applicable(a, "r_zext1", "\0\0\0a"))
+        a = Dummy(size=32)
+        assert (Encoding.is_applicable(a, "p_zext1", "\0\0\0a")) # type: ignore
+        assert (not Encoding.is_applicable(a, "p_zext1", "\0\0ba")) # type: ignore
+        assert (not Encoding.is_applicable(a, "r_zext1", "\0\0\0a")) # type: ignore
+        assert (Encoding.is_applicable(a, "r_zext1", "\0\0\0a")) # type: ignore
 
 
 if __name__ == '__main__':
