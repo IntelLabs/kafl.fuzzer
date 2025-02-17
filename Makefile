@@ -39,3 +39,9 @@ lint:
 lint_check:
 	flake8 --count \
 		kafl_fuzzer *.py
+
+type:
+	mypy -p kafl_fuzzer
+
+type_check:
+	mypy -p kafl_fuzzer
