@@ -21,9 +21,8 @@ import inotify.adapters
 import msgpack
 import psutil
 
-from kafl_fuzzer.common.config import load_config
+from kafl_fuzzer.common.config import load_config, settings # type: ignore[no-redef]
 from kafl_fuzzer.common.util import read_binary_file
-from kafl_fuzzer.common.config import settings
 
 class Interface:
     def __init__(self, stdscr):
@@ -434,7 +433,7 @@ class GuiDrawer:
             try:
                 self.data.mem = mem_info
                 self.data.cpu = cpu_info
-                self.data.swap = swap_info
+                self.data.swap = swap_info # type: ignore
             finally:
                 self.gui_mutex.release()
 
@@ -611,7 +610,7 @@ class GuiData:
         return 100 * float(self.mem.used) / float(self.mem.total)
 
     def swap_used(self):
-        return self.swap.used
+        return self.swap.used # type: ignore
 
     def yield_imported(self):
         return (self.stats["yield"].get("import", 0) +
@@ -802,7 +801,7 @@ class GuiData:
 
 
 def main(stdscr):
-    gui = GuiDrawer(settings.workdir, stdscr)
+    gui = GuiDrawer(settings.workdir, stdscr) # type: ignore
     gui.loop()
 
 

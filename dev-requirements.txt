@@ -2,3 +2,6 @@ flake8==5.0.4
 mccabe==0.7.0
 pycodestyle==2.9.1
 pyflakes==2.5.0
+mypy==1.14.1
+types-six==1.17.0.20241205
+types-PyYAML==6.0.12.20241230

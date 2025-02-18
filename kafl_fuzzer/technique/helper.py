@@ -116,12 +116,18 @@ def helper_init():
         bitmap_native_so.could_be_interest.restype = c_uint8
 
 def is_not_bitflip(value):
+    global bitmap_native_so
+    assert bitmap_native_so
     return 0 == bitmap_native_so.could_be_bitflip(c_uint32(value))
 
 def is_not_arithmetic(value, new_value, num_bytes, arith_max=AFL_ARITH_MAX):
+    global bitmap_native_so
+    assert bitmap_native_so
     return 0 == bitmap_native_so.could_be_arith(c_uint32(value), c_uint32(new_value),
                                                 c_uint8(num_bytes), c_uint8(arith_max))
 
 def is_not_interesting(value, new_value, num_bytes, le):
+    global bitmap_native_so
+    assert bitmap_native_so
     return 0 == bitmap_native_so.could_be_interest(c_uint32(value), c_uint32(new_value),
                                                    c_uint8(num_bytes), c_uint8(le))

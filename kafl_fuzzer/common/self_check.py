@@ -95,6 +95,7 @@ def check_qemu_version(config):
                 [qemu_path, "-version"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
+        assert proc.stdout
         output = str(proc.stdout.readline())
         proc.wait()
     except:

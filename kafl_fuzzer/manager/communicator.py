@@ -11,7 +11,8 @@ import select
 
 import logging
 import msgpack
-from multiprocessing.connection import Listener, Client
+from multiprocessing.connection import Listener, Client, Connection
+from typing import List, Union
 
 MSG_READY = 0
 MSG_IMPORT = 1
@@ -25,10 +26,10 @@ KAFL_NAMED_SOCKET = '/kafl_socket'
 
 class ServerConnection:
     def __init__(self, config):
-        Listener.fileno = lambda self: self._listener._socket.fileno()
+        Listener.fileno = lambda self: self._listener._socket.fileno() # type: ignore
         self.address = config.workdir + KAFL_NAMED_SOCKET
         self.listener = Listener(self.address, 'AF_UNIX', backlog=1000)
-        self.clients = [self.listener]
+        self.clients: List[Union[Listener,Connection]] = [self.listener]
         self.clients_seen = 0
         self.logger = logging.getLogger(__name__)
 

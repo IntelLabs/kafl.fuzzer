@@ -8,6 +8,7 @@ Main logic used by Worker to push nodes through various fuzzing stages/mutators.
 """
 
 import time
+from typing import Any, Dict, List
 
 from kafl_fuzzer.common.rand import rand
 from kafl_fuzzer.technique.grimoire_inference import GrimoireInference
@@ -38,11 +39,11 @@ class FuzzingStateLogic:
         radamsa.init_radamsa(config, self.worker.pid)
 
         self.stage_info = {}
-        self.stage_info_start_time = None
-        self.stage_info_execs = None
+        self.stage_info_start_time: float = 0
+        self.stage_info_execs: float = 0
         self.stage_info_findings = 0
-        self.attention_secs_start = None
-        self.attention_execs_start = None
+        self.attention_secs_start: float = 0
+        self.attention_execs_start: float = 0
 
     def __str__(self):
         return str(self.worker)
@@ -130,13 +131,13 @@ class FuzzingStateLogic:
         self.attention_execs_start = metadata.get("attention_execs", 0)
         self.performance = metadata.get("performance", 0)
 
-        self.initial_time = 0
-        self.havoc_time = 0
-        self.splice_time = 0
-        self.radamsa_time = 0
-        self.grimoire_time = 0
-        self.grimoire_inference_time = 0
-        self.redqueen_time = 0
+        self.initial_time: float = 0
+        self.havoc_time: float = 0
+        self.splice_time: float = 0
+        self.radamsa_time: float = 0
+        self.grimoire_time: float = 0
+        self.grimoire_inference_time: float = 0
+        self.redqueen_time: float = 0
 
         self.worker.statistics.event_stage(stage, nid)
 
@@ -214,7 +215,7 @@ class FuzzingStateLogic:
         return new_payload
 
     def handle_grimoire_inference(self, payload, metadata):
-        grimoire_info = {}
+        grimoire_info: Dict[Any, Any] = {}
 
         if not self.config.grimoire:
             return grimoire_info
@@ -368,7 +369,6 @@ class FuzzingStateLogic:
         self.stage_update_label("redq_trace")
         rq_info = RedqueenInfoGatherer()
         rq_info.make_paths(RedqueenWorkdir(self.worker.pid, self.config))
-        rq_info.verbose = False
         for pld in colored_alternatives:
             if self.execute_redqueen(pld):
                 rq_info.get_info(pld)
@@ -544,7 +544,7 @@ class FuzzingStateLogic:
         if orig_hash is None:
             return None
 
-        colored_arrays = []
+        colored_arrays: List[Any] = []
         for i in range(FuzzingStateLogic.COLORIZATION_COUNT):
             if len(colored_arrays) >= FuzzingStateLogic.COLORIZATION_COUNT:
                 assert False  # TODO remove me

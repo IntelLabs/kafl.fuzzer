@@ -10,20 +10,23 @@ on:
   pull_request:
 
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task: [lint_check, type_check]
 
     steps:
     - uses: actions/checkout@v3
 
     - uses: ./.github/actions/common-setup
 
-    - name: Check format
-      run: make lint_check
+    - name: Run ${{ matrix.task }}
+      run: make ${{ matrix.task }}
 
   release:
     # this job makes an official Github release
-    needs: [lint]
+    needs: [check]
     runs-on: ubuntu-latest
     permissions:
       contents: write

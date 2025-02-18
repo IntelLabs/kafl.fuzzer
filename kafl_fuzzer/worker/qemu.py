@@ -17,6 +17,7 @@ import sys
 import time
 import shutil
 import logging
+from typing import Optional
 
 from kafl_fuzzer.common.util import strdump, print_hprintf
 from kafl_fuzzer.technique.redqueen.workdir import RedqueenWorkdir
@@ -49,8 +50,8 @@ class qemu:
         self.logger_no_prefix = logging.getLogger(__name__)
         self.logger = WorkerLogAdapter(self.logger_no_prefix, {'pid': self.pid})
 
-        self.process = None
-        self.control = None
+        self.process: Optional[subprocess.Popen] = None
+        self.control: Optional[socket.socket] = None
         self.exiting = False
         self.persistent_runs = 0
 
@@ -289,10 +290,12 @@ class qemu:
 
     # release Qemu and wait for it to return
     def run_qemu(self):
+        assert self.control
         self.control.send(b'x')
         self.control.recv(1)
 
     def wait_qemu(self):
+        assert self.control
         self.control.recv(1)
 
     def __qemu_handshake(self):
@@ -325,7 +328,7 @@ class qemu:
         # Note: setblocking() disables the timeout! settimeout() will automatically set blocking!
         self.control = socket.socket(socket.AF_UNIX)
         self.control.settimeout(None)
-        self.control.setblocking(1)
+        self.control.setblocking(True)
 
         # Wait for the socket to appear. Fail early if Qemu is done and we get no socket.
         retry_timeout = 6
@@ -335,6 +338,7 @@ class qemu:
                 self.control.connect(self.control_filename)
                 return True
             except socket.error as e:
+                assert self.process
                 if self.process.poll() is not None:
                     self.logger.error("Aborting due to unexpected Qemu exit.")
                     raise e

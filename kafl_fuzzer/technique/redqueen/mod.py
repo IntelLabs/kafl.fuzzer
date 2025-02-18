@@ -33,10 +33,12 @@ class RedqueenInfoGatherer:
         self.num_alternative_inputs += 1
         self.save_rq_data(self.num_alternative_inputs, input_data)
         #logger.debug("redqueen saving new input %d" % self.num_alternative_inputs)
+        assert self.collected_infos_path
         with open(self.collected_infos_path + "/input_%d.bin" % (self.num_alternative_inputs), "wb") as f:
             f.write(input_data)
 
     def save_rq_data(self, id, data):
+        assert self.workdir
         if os.path.exists(self.workdir.redqueen()):
             copyfile(self.workdir.redqueen(), "%s/redqueen_result_%d.txt" % (self.collected_infos_path, id))
             # copyfile(self.workdir.code_dump(),"%s/redqueen_vm.img"%(self.collected_infos_path))

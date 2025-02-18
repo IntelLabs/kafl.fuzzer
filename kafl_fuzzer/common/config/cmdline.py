@@ -165,7 +165,7 @@ class ConfigParserBuilder():
         self._add_mcat_subcommand(subcommands)
         return parser
 
-    def _base_parser(self):
+    def _base_parser(self) -> ArgumentParser:
         return argparse.ArgumentParser(fromfile_prefix_chars='@')
 
     def _add_fuzz_subcommand(self, parser: _SubParsersAction):

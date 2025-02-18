@@ -47,6 +47,7 @@ class GlobalBitmap:
     def get_new_byte_and_bit_counts(self, local_bitmap):
         c_new_bitmap = local_bitmap.cbuffer
         assert c_new_bitmap
+        assert GlobalBitmap.bitmap_native_so
         if local_bitmap.is_lut_applied():
             result = GlobalBitmap.bitmap_native_so.are_new_bits_present_no_apply_lut(self.c_bitmap, c_new_bitmap,
                                                                                      ctypes.c_uint64(self.bitmap_size))
@@ -101,6 +102,7 @@ class GlobalBitmap:
 
     def update_with(self, exec_result):
         assert (not self.read_only)
+        assert GlobalBitmap.bitmap_native_so
         GlobalBitmap.bitmap_native_so.update_global_bitmap(self.c_bitmap, exec_result.cbuffer,
                                                            ctypes.c_uint64(self.bitmap_size))
 

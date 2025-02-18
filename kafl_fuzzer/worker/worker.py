@@ -17,6 +17,7 @@ import sys
 import shutil
 import tempfile
 import logging
+from typing import Any, Dict
 import lz4.frame as lz4
 
 #from kafl_fuzzer.common.config import FuzzerConfiguration
@@ -81,7 +82,7 @@ class WorkerTask:
         self.conn.send_ready()
 
     def handle_node(self, msg):
-        meta_data: bytes = QueueNode.get_metadata(self.config.workdir, msg["task"]["nid"])
+        meta_data: Dict[str, Any] = QueueNode.get_metadata(self.config.workdir, msg["task"]["nid"])
         payload: bytes = QueueNode.get_payload(self.config.workdir, meta_data)
 
         # fixme: determine globally based on all seen regulars

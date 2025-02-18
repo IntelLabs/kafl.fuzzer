@@ -7,6 +7,7 @@
 Fuzz inputs are managed as nodes in a queue. Any persistent metadata is stored here as node attributes.
 """
 
+from typing import Any, Dict
 import lz4.frame
 import msgpack
 
@@ -34,8 +35,9 @@ class QueueNode:
         self.set_state("initial", write=False)
 
     @staticmethod
-    def get_metadata(workdir, node_id) -> bytes:
-        return msgpack.unpackb(read_binary_file(QueueNode.__get_metadata_filename(workdir, node_id)), strict_map_key=False)
+    def get_metadata(workdir, node_id) -> Dict[str, Any]:
+        return dict(msgpack.unpackb(read_binary_file(QueueNode.__get_metadata_filename(workdir, node_id)), strict_map_key=False))
+    
 
     @staticmethod
     def get_payload(workdir, node_struct) -> bytes:
