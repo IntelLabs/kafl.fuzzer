@@ -63,7 +63,7 @@ class ExecutionResult:
             assert not pre_lut, "Request pre-LUT hash but LUT has been applied already."
         else:
             self.apply_lut()
-        return "%016x" % mmh3.hash64(self.cbuffer, seed=0xaaaaaaaa, x64arch=True, signed=False)[0]
+        return "%016x" % mmh3.hash64(bytes(self.cbuffer), seed=0xaaaaaaaa, x64arch=True, signed=False)[0]
 
     def apply_lut(self):
         if not self.lut_applied:
