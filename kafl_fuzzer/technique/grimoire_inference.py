@@ -26,8 +26,11 @@ class GrimoireInference:
 
     @staticmethod
     def wordlist_to_regex(words):
-        escaped = list(map(re.escape, words))
-        combined = '|'.join(sorted(escaped, key=len, reverse=True))
+        # escaped = list(map(re.escape, words))
+        # combined = '|'.join(sorted(escaped, key=len, reverse=True))
+        words_bytes = [w.encode() if isinstance(w, str) else w for w in words]                 
+        escaped = [re.escape(w) for w in words_bytes]
+        combined = b'|'.join(sorted(escaped, key=len, reverse=True))
         return re.compile(combined)
 
     def load_strings(self):
@@ -43,9 +46,10 @@ class GrimoireInference:
                     s = (l.split("=\"")[1].split("\"\n")[0])
                     if s == "":
                         continue
-                    self.tokens[tuple([c.encode() for c in s])] = 0
-                    strings.append(s)
-                except:
+                    s_bytes = s.encode() if isinstance(s, str) else bytes(s)
+                    self.tokens[tuple(bytes([c]) for c in s_bytes)] = 0
+                    strings.append(s_bytes)
+                except Exception:
                     pass
         self.strings = strings
         self.strings_regex = self.wordlist_to_regex(strings)
