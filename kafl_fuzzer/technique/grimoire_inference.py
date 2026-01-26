@@ -28,7 +28,7 @@ class GrimoireInference:
     def wordlist_to_regex(words):
         # escaped = list(map(re.escape, words))
         # combined = '|'.join(sorted(escaped, key=len, reverse=True))
-        words_bytes = [w.encode() if isinstance(w, str) else w for w in words]                 
+        words_bytes = [w.encode() if isinstance(w, str) else w for w in words]
         escaped = [re.escape(w) for w in words_bytes]
         combined = b'|'.join(sorted(escaped, key=len, reverse=True))
         return re.compile(combined)
@@ -46,7 +46,7 @@ class GrimoireInference:
                     s = (l.split("=\"")[1].split("\"\n")[0])
                     if s == "":
                         continue
-                    s_bytes = s.encode() if isinstance(s, str) else bytes(s)
+                    s_bytes = s.encode()
                     self.tokens[tuple(bytes([c]) for c in s_bytes)] = 0
                     strings.append(s_bytes)
                 except Exception:
